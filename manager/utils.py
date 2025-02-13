@@ -1,0 +1,26 @@
+import pygame as pg
+from typing import Callable, NoReturn
+
+
+class QuitPygame(BaseException): ...
+
+class PygameInit:
+
+    def __enter__(self) -> None:
+        pg.init()
+
+    def __exit__(self, _, e, *args) -> None:
+
+        if e:
+            pg.quit()
+
+class SwitchInterface(BaseException):
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+
+def switch_interface(name: str) -> Callable[[], NoReturn]:
+    def f() -> NoReturn:
+        raise SwitchInterface(name)
+    return f

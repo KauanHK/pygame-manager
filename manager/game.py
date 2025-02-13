@@ -1,23 +1,7 @@
 import pygame as pg
 from .interface import Interface, get_interface
+from .utils import PygameInit, QuitPygame, SwitchInterface
 
-
-class QuitPygame(BaseException): ...
-
-class PygameInit:
-
-    def __enter__(self) -> None:
-        pg.init()
-
-    def __exit__(self, _, e, *args) -> None:
-
-        if e:
-            pg.quit()
-
-class SwitchInterface(BaseException):
-
-    def __init__(self, name: str, *args) -> None:
-        self.name = name
 
 class Game:
 
