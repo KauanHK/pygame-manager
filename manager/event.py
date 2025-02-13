@@ -23,14 +23,13 @@ class Event:
         for k,v in self.kwargs.items():
 
             if callable(v):
-                if not self._objects:
-                    if not v(*self._get_v_params(event_dict[k])):
-                        return
-                for obj in self._objects:
-                    if not v(obj, event_dict[k]):
-                        objects.remove(obj)
                 if not objects:
-                    return
+                    if not v(event_dict[k]):
+                        return
+                else:
+                    for obj in objects:
+                        if not v(obj, event_dict[k]):
+                            objects.remove(obj)
 
             elif v != event_dict[k]:
                 return
