@@ -1,15 +1,20 @@
 import pygame as pg
 from .interface import Interface, get_interface
-from .utils import PygameInit, QuitPygame, SwitchInterface
+from .event import Event
+from .utils import PygameInit, QuitPygame, SwitchInterface, quit_pygame
 
 
 class Game:
 
-    def __init__(self) -> None:
+    def __init__(self, quit: bool = True) -> None:
         
         self._interfaces: list[Interface] = []
         self._current_interface: Interface | None = None
         self._current_event_types: tuple[int, ...] = ()
+        self._global_event_types: tuple[int, ...] = ()
+        self._events: dict[int, list[Event]] = {}
+        if quit:
+            self._events[pg.QUIT] = [Event(quit_pygame)]
 
     def register_interface(self, interface: Interface) -> None:
 
@@ -24,6 +29,7 @@ class Game:
 
         pg.init()
         try:
+            self._global_event_types = tuple(self._events.keys())
             self._current_event_types = self._current_interface.get_event_types()
             self._run(screen)
         except QuitPygame: ...
@@ -40,11 +46,16 @@ class Game:
                 self._frame(screen, clock)
             except SwitchInterface as e:
                 self._current_interface = get_interface(e.name)
+                self._current_event_types = self._current_interface.get_event_types()
 
     def _frame(self, screen: pg.Surface, clock: pg.time.Clock) -> None:
-            
-        for event in pg.event.get(self._current_event_types):
-            self._current_interface.run_event(event)
+        
+        for pygame_event in pg.event.get(self._global_event_types):
+            for event in self._events[pygame_event.type]:
+                event.run(pygame_event)
+
+        for pygame_event in pg.event.get(self._current_event_types):
+            self._current_interface.run_event(pygame_event)
         
         self._current_interface.run_frame(screen)
 

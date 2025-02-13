@@ -4,6 +4,9 @@ from typing import Callable, NoReturn
 
 class QuitPygame(BaseException): ...
 
+def quit_pygame(*args) -> NoReturn:
+    raise QuitPygame(*args)
+
 class PygameInit:
 
     def __enter__(self) -> None:
