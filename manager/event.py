@@ -41,12 +41,6 @@ class Event:
         for obj in objects:
             self.func(obj, **params)
 
-    def _get_v_params(self, event_value: Any) -> tuple[Any, ...]:
-        if self.is_bound_method():
-            return (self.func.__self__, event_value)
-        else:
-            return (event_value,)
-
     def _get_params(self, pygame_event: pg.event.Event) -> dict[str, Any]:
         
         params = {}
