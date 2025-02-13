@@ -14,7 +14,10 @@ class Interface:
         self._frame = None
         Interface._objects[name] = self
 
-    def event(self, event_type: int, params: tuple[str, ...] = (), **kwargs) -> Callable:
+    def get_name(self) -> str:
+        return self._name
+
+    def event(self, event_type: int, params: tuple[str, ...] = (), **kwargs) -> Callable[[Callable], Callable]:
 
         def decorator(f: Callable) -> Callable:
             self._events.add(f, event_type, params, **kwargs)
