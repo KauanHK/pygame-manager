@@ -16,7 +16,7 @@ class Game(BaseInterface):
         self._init = False
 
         if quit:
-            self._events[pg.QUIT] = [Event(quit_pygame)]
+            self._events.add(quit_pygame, pg.QUIT)
 
     def register_interface(self, interface: Interface) -> None:
 
