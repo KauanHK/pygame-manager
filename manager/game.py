@@ -1,8 +1,6 @@
 import pygame as pg
 from .interface import BaseInterface, Interface, get_interface
-from .event import Event
 from .utils import PygameInit, QuitPygame, SwitchInterface, quit_pygame
-from typing import Callable
 
 
 # Game herda BaseInterface, pois seu comportamento 
