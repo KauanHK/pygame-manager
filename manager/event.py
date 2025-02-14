@@ -20,26 +20,17 @@ class Event(BaseEvent):
 
         params = self._get_params(pygame_event)
         event_dict = pygame_event.dict
-        objects = self._objects.copy()
         for k,v in self.kwargs.items():
 
             if callable(v):
-                if not objects:
-                    if not v(event_dict[k]):
-                        return
-                else:
-                    for obj in objects:
-                        if not v(obj, event_dict[k]):
-                            objects.remove(obj)
+                v_params = self._get_v_params(event_dict[k])
+                if not v(*v_params):
+                    return
 
             elif v != event_dict[k]:
                 return
 
-        if not objects:
-            self.func(**params)
-            return
-        for obj in objects:
-            self.func(obj, **params)
+        self.func(**params)
 
     def _get_params(self, pygame_event: pg.event.Event) -> dict[str, Any]:
         
