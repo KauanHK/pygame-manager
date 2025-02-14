@@ -43,7 +43,7 @@ class Event(BaseEvent):
 
         if hasattr(self.func, '__self__'):
             return self.func.__self__, value
-        return value
+        return (value,)
     
     def __repr__(self) -> str:
         return f'Event({self.func.__qualname__}{self.params}, kwargs = {self.kwargs})'
