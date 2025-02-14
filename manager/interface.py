@@ -233,3 +233,9 @@ def get_interface(name: str) -> Interface:
     if name not in Interface.objects:
         raise KeyError(f"Interface '{name}' não existe.")
     return Interface.objects[name]
+
+def activate_interface(name: str) -> None:
+    get_interface(name).activate()
+
+def deactivate_interface(name: str) -> None:
+    get_interface(name).deactivate()
