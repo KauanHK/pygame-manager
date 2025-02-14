@@ -186,23 +186,19 @@ class Interface:
             pg.quit()
 
     def run_event(self, pygame_event: pg.event.Event) -> None:
-        """Processa os eventos carregados.
-        
-        :param pygame.event.Event pygame_event: O evento pygame.
-        """
 
-        for event in self._events.get(pygame_event.type, []):
-            event.run(pygame_event)
-        for it in filter(lambda it: it.is_activated(), self._interfaces):
-            it.run_event(pygame_event)
-
-    def run_frame(self, screen: pg.Surface) -> None:
-        """Executa um frame, primeiro o frame global, se tiver, e o frame da interface."""
-
-        if self._frame is not None:
-            self._frame(screen)
-        for interface in filter(lambda it: it.is_activated(), self._interfaces):
-            interface.run_frame(screen)
+        try:
+            self._run_event(pygame_event)
+        except SwitchInterface as e:
+            activated = False
+            for it in self._interfaces:
+                if it.get_name() == e.name:
+                    it.activate()
+                    activated = True
+                else:
+                    it.deactivate()
+            if not activated:
+                raise e
 
     def _run(self, screen: pg.Surface) -> None:
         """Executa o loop do jogo."""
@@ -219,14 +215,30 @@ class Interface:
         while True:
             for event in pg.event.get():
                 self.run_event(event)
-            self.run_frame(screen)
+            self._run_frame(screen)
 
             clock.tick(60)
             pg.display.flip()
 
     def _run_event(self, pygame_event: pg.event.Event) -> None:
+        """Processa os eventos carregados.
+        
+        :param pygame.event.Event pygame_event: O evento pygame.
+        """
 
-        pass
+        activated = self.get_activated()
+        for event in self._events.get(pygame_event.type, []):
+            event.run(pygame_event)
+        for it in activated:
+            it.run_event(pygame_event)
+
+    def _run_frame(self, screen: pg.Surface) -> None:
+        """Executa um frame, primeiro o frame global, se tiver, e o frame da interface."""
+
+        if self._frame is not None:
+            self._frame(screen)
+        for it in self.get_activated():
+            it._run_frame(screen)
 
     def __repr__(self) -> str:
         return f'Interface({self._name})'
