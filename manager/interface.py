@@ -1,13 +1,26 @@
 import pygame as pg
 from .event import LoadingEvent, Event
+from .utils import QuitPygame, PygameInit
 from functools import wraps
 from typing import Callable, Self
 
 
-class BaseInterface:
+class Interface:
 
-    def __init__(self) -> None:
-        """Base para Interface."""
+    objects: dict[str, Self] = {}
+
+    def __init__(self, name: str) -> None:
+        """Cria uma instância de Interface.
+        
+        :param str name: O nome da interface.
+        """
+
+        # Armazenar a instância no map objects
+        self._name = name
+        Interface.objects[name] = self
+
+        # Status da interface para indicar se é para ela ser executada ou não
+        self._is_activated: bool = False
 
         # Registro de eventos
         self._owners: dict[str, list[LoadingEvent]] = {}
@@ -17,8 +30,11 @@ class BaseInterface:
         # Eventos finais (carregados)
         self._events: dict[int, list[Event]] = {}
 
+        # Subinterfaces registradas
+        self._interfaces: list[Interface] = []
+
+        # Frame da interface
         self._frame = None
-        self._event_types: set[int] = set()
 
     def init(self) -> None:
         """Carrega os eventos registrados."""
@@ -34,11 +50,37 @@ class BaseInterface:
                 objects = self._objects.get(owner)
                 events = le.load(cls, objects)
                 self._events[le.event_type].extend(events)
+        
+        for it in self._interfaces:
+            it.init()
 
-    def get_event_types(self) -> tuple[int]:
-        """Retorna uma tupla sem valores repetidos com os tipos dos eventos registrados, 
-        mesmo que os eventos não tenham sido inicializados ainda."""
-        return tuple(self._event_types)
+    def is_activated(self) -> bool:
+        return self._is_activated
+
+    def activate(self) -> None:
+        self._is_activated = True
+
+    def deactivate(self) -> None:
+        self._is_activated = False
+
+    def pygame_init(self) -> PygameInit:
+        """Retorna um context manager para inicialização segura do pygame.
+        O context manager inicializa o pygame e só o fecha se uma exceção ocorrer.
+
+        Use dentro de um bloco with:
+        ```python
+        with game.pygame_init():
+            import main_menu, options_menu, game
+        ```
+        """
+
+        self._init = True
+        return PygameInit()
+
+    def register_interface(self, interface: Self) -> None:
+        """Registra uma interface."""
+
+        self._interfaces.append(interface)
 
     def event(self, event_type: int, params: tuple[str, ...] = (), **kwargs) -> Callable[[Callable], Callable]:
         """Registra uma função ou método. 
@@ -95,8 +137,6 @@ class BaseInterface:
             if owner not in self._owners:
                 self._owners[owner] = []
             self._owners[owner].append(event)
-            self._events.add(f, event_type, params, **kwargs)
-            self._event_types.add(event_type)
             return f
 
         return decorator
@@ -120,6 +160,25 @@ class BaseInterface:
         """Registra um frame para a interface."""
         self._frame = frame
 
+    def run(self, screen: pg.Surface) -> None:
+        """Executa o jogo.
+        
+        Caso uma exceção ocorra, o pygame será fechado. 
+        Isso significa que o jogo pode ser fechado com ctrl+c
+        de forma segura.
+        """
+
+        if not self._init:
+            pg.init()
+        try:
+            self.init()
+            self._run(screen)
+        except QuitPygame: ...
+        except KeyboardInterrupt:
+            print()
+        finally:
+            pg.quit()
+
     def run_event(self, pygame_event: pg.event.Event) -> None:
         """Processa os eventos carregados.
         
@@ -128,25 +187,40 @@ class BaseInterface:
 
         for event in self._events.get(pygame_event.type, []):
             event.run(pygame_event)
+        for it in filter(lambda it: it.is_activated(), self._interfaces):
+            it.run_event(pygame_event)
 
+    def run_frame(self, screen: pg.Surface) -> None:
+        """Executa um frame, primeiro o frame global, se tiver, e o frame da interface."""
 
-class Interface(BaseInterface):
+        if self._frame is not None:
+            self._frame(screen)
+        for interface in filter(lambda it: it.is_activated(), self._interfaces):
+            interface.run_frame(screen)
 
-    objects: dict[str, Self] = {}
+    def _run(self, screen: pg.Surface) -> None:
+        """Executa o loop do jogo."""
 
-    def __init__(self, name: str) -> None:
-        """Cria uma instância de Interface.
-        
-        :param str name: O nome da interface.
-        """
+        # 1. Executa os eventos
+          # Primeiro os eventos globais, depois os da interface atual
+        # 2. Executa o frame
+          # Primeiro o frame global, depois os da interface atual
+        # Caso ocorra uma exceção de SwitchInterface
+          # Atualiza a interface atual
+          # Atualiza os event_types
 
-        super().__init__()
-        self._name = name
-        Interface.objects[name] = self
+        clock = pg.time.Clock()
+        while True:
+            for event in pg.event.get():
+                self.run_event(event)
+            self.run_frame(screen)
 
-    def get_name(self) -> str:
-        """Retorna o nome da interface."""
-        return self._name
+            clock.tick(60)
+            pg.display.flip()
+
+    def _run_event(self, pygame_event: pg.event.Event) -> None:
+
+        pass
 
     def __repr__(self) -> str:
         return f'Interface({self._name})'
