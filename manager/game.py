@@ -33,6 +33,8 @@ class Game(BaseInterface):
         if not self._init:
             pg.init()
         try:
+            for interface in self._interfaces:
+                interface.init()
             self._current_event_types = self.get_event_types()
             self._run(screen)
         except QuitPygame: ...
