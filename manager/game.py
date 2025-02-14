@@ -64,8 +64,7 @@ class Game(BaseInterface):
     def _run_events(self) -> None:
 
         for pygame_event in pg.event.get(self._current_event_types):
-            for event in self._events.get(pygame_event.type, []):
-                event.run(pygame_event)
+            self.run_event(pygame_event)
             self._current_interface.run_event(pygame_event)
 
     def _run_frame(self, screen: pg.Surface) -> None:
