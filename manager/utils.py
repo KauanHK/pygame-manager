@@ -9,8 +9,13 @@ def quit_pygame(*args) -> NoReturn:
 
 class PygameInit:
 
+    _init = False
+
     def __enter__(self) -> None:
-        pg.init()
+        
+        if not PygameInit._init:
+            pg.init()
+            PygameInit._init = True
 
     def __exit__(self, _, e, *args) -> None:
 
