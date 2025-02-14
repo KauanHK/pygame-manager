@@ -48,6 +48,12 @@ class Event(BaseEvent):
             params[param] = pygame_event.dict[param]
         return params
     
+    def _get_v_params(self, value: Any) -> tuple[Any] | tuple[object, Any]:
+
+        if hasattr(self.func, '__self__'):
+            return self.func.__self__, value
+        return value
+    
     def __repr__(self) -> str:
         return f'Event({self.func.__qualname__}{self.params}, kwargs = {self.kwargs})'
 
