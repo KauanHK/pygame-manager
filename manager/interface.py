@@ -118,5 +118,5 @@ def get_interface(name: str) -> Interface:
     Se não houver nenhuma interface com o nome fornecido, lança um KeyError."""
 
     if name not in Interface._objects:
-        raise NameError(f"Interface '{name}' não existe.")
+        raise KeyError(f"Interface '{name}' não existe.")
     return Interface._objects[name]
