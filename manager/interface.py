@@ -50,6 +50,9 @@ class Interface(BaseInterface):
     def get_name(self) -> str:
         return self._name
 
+    def init(self) -> None:
+        self._events.init()
+
     def __repr__(self) -> str:
         return f'Interface({self._name})'
 
