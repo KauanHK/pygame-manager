@@ -111,8 +111,8 @@ class Events:
 
                 cls = self._classes.get(owner)
                 objects = self._objects.get(owner)
-                self._events = le.load(cls, objects)
-                self._events[le.event_type].extend(self._events)
+                events = le.load(cls, objects)
+                self._events[le.event_type].extend(events)
         
     def run(self, pygame_event: pg.event.Event) -> None:
 
