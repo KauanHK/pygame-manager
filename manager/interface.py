@@ -1,6 +1,6 @@
 import pygame as pg
 from .event import LoadingEvent, Event
-from .utils import QuitPygame, PygameInit
+from .utils import QuitPygame, PygameInit, SwitchInterface
 from functools import wraps
 from typing import Callable, Self
 
@@ -36,6 +36,9 @@ class Interface:
         # Frame da interface
         self._frame = None
 
+    def get_name(self) -> str:
+        return self._name
+
     def init(self) -> None:
         """Carrega os eventos registrados."""
 
@@ -62,6 +65,9 @@ class Interface:
 
     def deactivate(self) -> None:
         self._is_activated = False
+
+    def get_activated(self) -> list[Self]:
+        return list(filter(lambda it: it.is_activated(), self._interfaces))
 
     def pygame_init(self) -> PygameInit:
         """Retorna um context manager para inicialização segura do pygame.
