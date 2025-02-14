@@ -19,9 +19,6 @@ class BaseEvent:
 
 class Event(BaseEvent):
 
-    def __init__(self, func: Callable, params: tuple[str, ...] = (), **kwargs) -> None:
-        super().__init__(func, params, **kwargs)
-
     def run(self, pygame_event: pg.event.Event) -> None:
         """Processa um evento pygame. 
         Caso corresponda às configurações do Event, a função é executada.
