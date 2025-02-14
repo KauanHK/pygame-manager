@@ -11,6 +11,9 @@ class BaseInterface:
         self._frame = None
         self._event_types: set[int] = set()
 
+    def init(self) -> None:
+        self._events.init()
+
     def get_event_types(self) -> tuple[int]:
         return tuple(self._event_types)
 
@@ -49,9 +52,6 @@ class Interface(BaseInterface):
 
     def get_name(self) -> str:
         return self._name
-
-    def init(self) -> None:
-        self._events.init()
 
     def __repr__(self) -> str:
         return f'Interface({self._name})'
