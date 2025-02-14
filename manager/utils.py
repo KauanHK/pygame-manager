@@ -24,6 +24,4 @@ class SwitchInterface(BaseException):
 
 
 def switch_interface(name: str) -> Callable[[], NoReturn]:
-    def f() -> NoReturn:
-        raise SwitchInterface(name)
-    return f
+    raise SwitchInterface(name)
