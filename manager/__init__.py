@@ -1,17 +1,16 @@
-from .game import Game, QuitPygame, SwitchInterface
-from .interface import Interface, get_interface
-from .event import Event, Events
+from .interface import Interface, get_interface, activate_interface, deactivate_interface
+from .event import Event, LoadingEvent, BaseEvent
 from .utils import PygameInit, QuitPygame, SwitchInterface, switch_interface, quit_pygame
 
 
 __all__ = [
+    "activate_interface",
+    "BaseEvent",
+    "deactivate_interface",
     "Event",
-    "Events",
-    "Game",
     "get_interface",
     "Interface",
-    "QuitPygame",
-    "SwitchInterface",
+    "LoadingEvent",
     "PygameInit",
     "QuitPygame",
     "quit_pygame",
