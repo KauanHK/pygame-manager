@@ -56,7 +56,7 @@ class Game:
             pg.quit()
 
     def _get_event_types(self) -> tuple[str, ...]:
-        return tuple(set(*self._events.keys(), *self._current_interface.get_event_types()))
+        return tuple(set((*self._events.keys(), *self._current_interface.get_event_types())))
     
     def _run(self, screen: pg.Surface) -> None:
 
@@ -68,7 +68,7 @@ class Game:
                 self._run_frame(screen)
             except SwitchInterface as e:
                 self._current_interface = get_interface(e.name)
-                self._current_event_types = self._get_event_types()
+                self._event_types = self._get_event_types()
 
             clock.tick(60)
             pg.display.flip()
@@ -78,7 +78,7 @@ class Game:
         for pygame_event in pg.event.get(self._event_types):
             for event in self._events.get(pygame_event.type, []):
                 event.run(pygame_event)
-                self._current_interface.run_event(pygame_event)
+            self._current_interface.run_event(pygame_event)
 
     def _run_frame(self, screen: pg.Surface) -> None:
 
