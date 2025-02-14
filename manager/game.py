@@ -17,6 +17,12 @@ class Game(BaseInterface):
 
         if quit:
             self._events.add(quit_pygame, pg.QUIT)
+            self._event_types.add(pg.QUIT)
+
+    def init(self) -> None:
+        super().init()
+        for interface in self._interfaces:
+            interface.init()
 
     def register_interface(self, interface: Interface) -> None:
 
@@ -33,8 +39,7 @@ class Game(BaseInterface):
         if not self._init:
             pg.init()
         try:
-            for interface in self._interfaces:
-                interface.init()
+            self.init()
             self._current_event_types = self.get_event_types()
             self._run(screen)
         except QuitPygame: ...
