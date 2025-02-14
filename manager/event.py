@@ -14,7 +14,7 @@ class BaseEvent:
 class Event(BaseEvent):
 
     def __init__(self, func: Callable, params: tuple[str, ...] = (), **kwargs) -> None:
-        super().__init__(func, params, kwargs)
+        super().__init__(func, params, **kwargs)
 
     def run(self, pygame_event: pg.event.Event) -> None:
 
@@ -56,7 +56,7 @@ class LoadingEvent(BaseEvent):
 
     def __init__(self, func: Callable, event_type: int, params: tuple[str, ...] = (), **kwargs) -> None:
 
-        super().__init__(func, params, kwargs)
+        super().__init__(func, params, **kwargs)
         self.event_type = event_type
 
     def load(self, cls: type | None = None, objects: list[object] | None = None) -> list[Event]:
