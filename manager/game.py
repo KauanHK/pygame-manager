@@ -2,6 +2,7 @@ import pygame as pg
 from .interface import Interface, get_interface
 from .event import Event
 from .utils import PygameInit, QuitPygame, SwitchInterface, quit_pygame
+from typing import Callable
 
 
 class Game:
@@ -15,6 +16,16 @@ class Game:
         self._events: dict[int, list[Event]] = {}
         if quit:
             self._events[pg.QUIT] = [Event(quit_pygame)]
+
+    def event(self, event_type: int, params: tuple[str, ...] = (), **kwargs) -> Callable[[Callable], Callable]:
+
+        def decorator(f: Callable) -> Callable:
+            if event_type not in self._events:
+                self._events[event_type] = []
+            self._events[event_type].append(Event(f, params, **kwargs))
+            return f
+
+        return decorator
 
     def register_interface(self, interface: Interface) -> None:
 
