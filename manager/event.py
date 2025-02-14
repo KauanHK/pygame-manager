@@ -12,9 +12,6 @@ class Event:
         self.kwargs = kwargs
         self._objects: list[object] = []
 
-    def register_object(self, obj: object) -> None:
-        self._objects.append(obj)
-
     def run(self, pygame_event: pg.event.Event) -> None:
 
         params = self._get_params(pygame_event)
@@ -51,19 +48,38 @@ class Event:
         return f'Event({self.func.__qualname__}{self.params}, kwargs = {self.kwargs})'
 
 
+class LoadingEvent:
+
+    def __init__(self, func: Callable, event_type: int, params: tuple[str, ...] = (), **kwargs) -> None:
+
+        self.func = func
+        self.event_type = event_type
+        self.params = params
+        self.kwargs = kwargs
+
+    def load(self, cls: type | None = None, objects: list[object] | None = None) -> list[Event]:
+
+        if cls is None:
+            return [Event(self.func, self.params, **self.kwargs)]
+        
+        events = []
+        for obj in objects:
+            events.append(Event(getattr(obj, self.func.__name__), self.params, **self.kwargs))
+        return events
+
+
 class Events:
 
     def __init__(self) -> None:
 
+        self._owners: dict[str, list[LoadingEvent]] = {}
+        self._classes: dict[str, type] = {}
+        self._objects: dict[str, list[object]] = {}
         self._events: dict[int, list[Event]] = {}
-        self._owners: dict[str, list[Event]] = {}
 
     def add(self, func: Callable, event_type: int, params: tuple[str, ...] = (), **kwargs) -> None:
 
-        event = Event(func, params, **kwargs)
-        if event_type not in self._events:
-            self._events[event_type] = []
-        self._events[event_type].append(event)
+        event = LoadingEvent(func, event_type, params, **kwargs)
         owner = '.'.join(func.__qualname__.split('.')[:-1])
         if owner not in self._owners:
             self._owners[owner] = []
@@ -71,19 +87,31 @@ class Events:
 
     def register_cls(self, cls: type) -> None:
 
+        self._classes[cls.__qualname__] = cls
+        self._objects[cls.__qualname__] = []
+
         original_init = cls.__init__
         @wraps(original_init)
         def __init__(*args, **kwargs) -> None:
             original_init(*args, **kwargs)
-
-            for event in self._owners[cls.__qualname__]:
-                event.register_object(args[0])
+            self._objects[cls.__qualname__].append(args[0])
 
         cls.__init__ = __init__
 
-    def get_event_types(self) -> tuple[str, ...]:
-        return tuple(self._events.keys())
+    def init(self) -> None:
 
+        self._events: dict[int, list[Event]] = {}
+        for owner, loading_events in self._owners.items():
+            for le in loading_events:
+
+                if le.event_type not in self._events:
+                    self._events[le.event_type] = []
+
+                cls = self._classes.get(owner)
+                objects = self._objects.get(owner)
+                self._events = le.load(cls, objects)
+                self._events[le.event_type].extend(self._events)
+        
     def run(self, pygame_event: pg.event.Event) -> None:
 
         for event in self._events.get(pygame_event.type, []):
