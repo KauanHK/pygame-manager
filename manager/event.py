@@ -11,7 +11,7 @@ class BaseEvent:
         self.params = params
         self.kwargs = kwargs
 
-class Event:
+class Event(BaseEvent):
 
     def __init__(self, func: Callable, params: tuple[str, ...] = (), **kwargs) -> None:
         super().__init__(func, params, kwargs)
@@ -52,7 +52,7 @@ class Event:
         return f'Event({self.func.__qualname__}{self.params}, kwargs = {self.kwargs})'
 
 
-class LoadingEvent:
+class LoadingEvent(BaseEvent):
 
     def __init__(self, func: Callable, event_type: int, params: tuple[str, ...] = (), **kwargs) -> None:
 
