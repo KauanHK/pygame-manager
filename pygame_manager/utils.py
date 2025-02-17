@@ -1,6 +1,8 @@
 import pygame as pg
-from typing import Callable, NoReturn
+from typing import Callable, NoReturn, TypeVar, Any
 
+
+FuncEvent = TypeVar('FuncEvent', bound = Callable[..., Any])
 
 class QuitPygame(BaseException): ...
 
