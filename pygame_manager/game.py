@@ -1,9 +1,20 @@
 import pygame as pg
 from .interface import BaseInterface, Interface
-from .utils import PygameInit, QuitPygame
+from .utils import PygameInit, QuitPygame, quit_pygame
 
 
 class Game(BaseInterface):
+
+    def __init__(
+            self,
+            fps: int = 60,
+            quit: bool = True
+    ) -> None:
+        super().__init__()
+
+        self.fps = fps
+        if quit:
+            self.event(pg.QUIT)(quit_pygame)
 
     def pygame_init(self) -> PygameInit:
         """Retorna um context manager para inicialização segura do pygame.
@@ -60,7 +71,7 @@ class Game(BaseInterface):
                 self.run_event(event)
             self._run_frame(screen)
 
-            clock.tick(60)
+            clock.tick(self.fps)
             pg.display.flip()
 
     def __repr__(self) -> str:
