@@ -1,6 +1,6 @@
 import pygame as pg
 from .event import LoadingEvent, Event
-from .utils import SwitchInterface
+from .utils import SwitchInterface, FuncEvent
 from functools import wraps
 from typing import Callable, Self
 
@@ -44,7 +44,7 @@ class BaseInterface:
     def get_activated(self) -> list[Self]:
         return list(filter(lambda it: it.is_activated(), self._interfaces))
 
-    def event(self, event_type: int, params: tuple[str, ...] = (), **kwargs) -> Callable[[Callable], Callable]:
+    def event(self, event_type: int, params: tuple[str, ...] = (), **kwargs) -> Callable[[FuncEvent], FuncEvent]:
         """Registra uma função ou método. 
         Se for um método, é necessário registrar a classe em que está inserido.
 
@@ -93,7 +93,7 @@ class BaseInterface:
             ```
         """
 
-        def decorator(f: Callable) -> Callable:
+        def decorator(f: FuncEvent) -> FuncEvent:
             event = LoadingEvent(f, event_type, params, **kwargs)
             owner = '.'.join(f.__qualname__.split('.')[:-1])
             if owner not in self._owners:
