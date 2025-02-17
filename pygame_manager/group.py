@@ -27,7 +27,7 @@ class Group:
         for it in self._interfaces:
             it.add_event(func, event_type, params, **kwargs)
 
-    def event(self, event_type: int, params: tuple[str, ...] = ..., **kwargs):
+    def event(self, event_type: int, params: tuple[str, ...] = (), **kwargs):
     
         def decorator(f: FuncEvent) -> FuncEvent:
             
