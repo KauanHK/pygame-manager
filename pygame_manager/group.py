@@ -6,14 +6,12 @@ class Group:
 
     def __init__(self, *interfaces: Interface | str) -> None:
         
-        super().__init__()
         self._interfaces: list[Interface] = []
         for it in interfaces:
             if isinstance(it, str):
                 it = get_interface(it)
             self._interfaces.append(it)
 
-        self._interfaces = interfaces
 
     def add(self, interface: Interface) -> None:
         self._interfaces.append(interface)
@@ -44,3 +42,4 @@ class Group:
         
         for it in self._interfaces:
             it.register_cls(cls)
+        return cls
