@@ -10,8 +10,16 @@ class Game(BaseInterface):
             fps: int = 60,
             quit: bool = True
     ) -> None:
-        super().__init__()
+        """Gerenciador de jogos pygame.
+        
+        Gerencia eventos e frames do jogo, dividindo o jogo de maneira modular em 
+        interfaces e subinterfaces.
 
+        :param int fps: FPS do jogo.
+        :param bool quit: Se True, registra um evento para fechar o jogo.
+        """
+
+        super().__init__()
         self.fps = fps
         if quit:
             self.event(pg.QUIT)(quit_pygame)
@@ -38,8 +46,11 @@ class Game(BaseInterface):
     def run(self, screen: pg.Surface) -> None:
         """Executa o jogo.
         
+        Somente as interfaces ativadas são executadas, 
+        sendo primeiro as de nível mais alto na hierarquia.
+        
         Caso uma exceção ocorra, o pygame será fechado. 
-        Isso significa que o jogo pode ser fechado com ctrl+c
+        O jogo pode ser fechado com ctrl+c
         de forma segura.
         """
 
@@ -55,15 +66,7 @@ class Game(BaseInterface):
             pg.quit()
 
     def _run(self, screen: pg.Surface) -> None:
-        """Executa o loop do jogo."""
-
-        # 1. Executa os eventos
-          # Primeiro os eventos globais, depois os da interface atual
-        # 2. Executa o frame
-          # Primeiro o frame global, depois os da interface atual
-        # Caso ocorra uma exceção de SwitchInterface
-          # Atualiza a interface atual
-          # Atualiza os event_types
+        """Executa o loop do jogo. """
 
         clock = pg.time.Clock()
         while True:
