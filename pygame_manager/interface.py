@@ -44,6 +44,14 @@ class BaseInterface:
     def get_activated(self) -> list[Self]:
         return list(filter(lambda it: it.is_activated(), self._interfaces))
 
+    def add_event(self, func: FuncEvent, event_type: int, params: tuple[str, ...] = (), **kwargs) -> None:
+
+        event = LoadingEvent(func, event_type, params, **kwargs)
+        owner = '.'.join(func.__qualname__.split('.')[:-1])
+        if owner not in self._owners:
+            self._owners[owner] = []
+        self._owners[owner].append(event)
+
     def event(self, event_type: int, params: tuple[str, ...] = (), **kwargs) -> Callable[[FuncEvent], FuncEvent]:
         """Registra uma função ou método. 
         Se for um método, é necessário registrar a classe em que está inserido.
@@ -94,11 +102,7 @@ class BaseInterface:
         """
 
         def decorator(f: FuncEvent) -> FuncEvent:
-            event = LoadingEvent(f, event_type, params, **kwargs)
-            owner = '.'.join(f.__qualname__.split('.')[:-1])
-            if owner not in self._owners:
-                self._owners[owner] = []
-            self._owners[owner].append(event)
+            self.add_event(f, event_type, params, **kwargs)
             return f
 
         return decorator
