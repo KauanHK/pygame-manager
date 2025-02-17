@@ -133,7 +133,7 @@ class BaseInterface:
         except SwitchInterface as e:
             activated = False
             for it in self._interfaces:
-                if it.name() == e.name:
+                if it.name == e.name:
                     it.activate()
                     activated = True
                 else:
