@@ -1,5 +1,6 @@
 from .interface import Interface, get_interface
 from .utils import FuncEvent
+from functools import wraps
 
 
 class Group:
@@ -38,8 +39,18 @@ class Group:
         
         return decorator
     
-    def register_cls(self, cls) -> None:
-        
+    def register_cls(self, cls: type) -> type:
+
         for it in self._interfaces:
-            it.register_cls(cls)
+            it._classes[cls.__qualname__] = cls
+            it._objects[cls.__qualname__] = []
+
+        original_init = cls.__init__
+        @wraps(original_init)
+        def __init__(*args, **kwargs) -> None:
+            original_init(*args, **kwargs)
+            for it in self._interfaces:
+                it._objects[cls.__qualname__].append(args[0])
+
+        cls.__init__ = __init__
         return cls
