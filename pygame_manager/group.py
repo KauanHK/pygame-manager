@@ -4,9 +4,15 @@ from .utils import FuncEvent
 
 class Group:
 
-    def __init__(self, *interfaces: Interface) -> None:
+    def __init__(self, *interfaces: Interface | str) -> None:
         
         super().__init__()
+        self._interfaces: list[Interface] = []
+        for it in interfaces:
+            if isinstance(it, str):
+                it = get_interface(it)
+            self._interfaces.append(it)
+
         self._interfaces = interfaces
 
     def add(self, interface: Interface) -> None:
