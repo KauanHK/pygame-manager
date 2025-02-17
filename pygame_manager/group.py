@@ -1,9 +1,9 @@
-from .interface import Interface, get_interface
+from .interface import Interface, get_interface, Base
 from .utils import FuncEvent
 from functools import wraps
 
 
-class Group:
+class Group(Base):
 
     def __init__(self, *interfaces: Interface | str) -> None:
         
