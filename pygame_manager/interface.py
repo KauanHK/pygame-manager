@@ -2,10 +2,26 @@ import pygame as pg
 from .event import LoadingEvent, Event
 from .utils import SwitchInterface, FuncEvent
 from functools import wraps
+from abc import ABC, abstractmethod
 from typing import Callable, Self
 
 
-class BaseInterface:
+class Base(ABC):
+
+    def get_activated(self) -> list[Self]:
+        return list(filter(lambda it: it.is_activated(), self._interfaces))
+
+    @abstractmethod
+    def add_event(self, func: FuncEvent, event_type: int, params: tuple[str, ...] = (), **kwargs) -> None: ...
+
+    @abstractmethod
+    def event(self, event_type: int, params: tuple[str, ...] = (), **kwargs) -> Callable[[FuncEvent], FuncEvent]: ...
+
+    @abstractmethod
+    def register_cls(self, cls: type) -> type: ...
+
+
+class BaseInterface(Base):
 
     def __init__(self) -> None:
 
@@ -40,9 +56,6 @@ class BaseInterface:
         
         for it in self._interfaces:
             it.init()
-
-    def get_activated(self) -> list[Self]:
-        return list(filter(lambda it: it.is_activated(), self._interfaces))
 
     def add_event(self, func: FuncEvent, event_type: int, params: tuple[str, ...] = (), **kwargs) -> None:
 
@@ -162,6 +175,7 @@ class BaseInterface:
             it._run_frame(screen)
 
 
+
 class Interface(BaseInterface):
 
     objects: dict[str, Self] = {}
@@ -216,4 +230,3 @@ def activate_interface(name: str) -> None:
 
 def deactivate_interface(name: str) -> None:
     get_interface(name).deactivate()
-
