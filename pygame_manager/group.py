@@ -40,6 +40,8 @@ class Group(Base):
     
     def register_cls(self, cls: type) -> type:
 
+        self._set_cls(cls)
+
         original_init = cls.__init__
         @wraps(original_init)
         def __init__(*args, **kwargs) -> None:
@@ -53,9 +55,8 @@ class Group(Base):
     def _wrapper(self, func: FuncEvent) -> FuncEvent:
         @wraps(func)
         def wrapper(*args, **kwargs) -> None:
-            for it in self._interfaces:
-                if it.is_activated():
-                    func(*args, **kwargs)
+            if args[0].interface.is_activated():
+                func(*args, **kwargs)
         return wrapper
 
     def _set_cls(self, cls: type) -> None:
