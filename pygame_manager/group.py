@@ -22,7 +22,9 @@ class Group(Base):
                 it = get_interface(it)
             self._interfaces.append(it)
 
-    def add(self, interface: Interface) -> None:
+    def add(self, interface: Interface | str) -> None:
+        if isinstance(interface, str):
+            interface = get_interface(interface)
         self._interfaces.append(interface)
 
     def remove(self, interface: Interface | str) -> None:
