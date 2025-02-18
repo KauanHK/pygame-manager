@@ -123,14 +123,13 @@ class BaseInterface(Base):
     def register_cls(self, cls: type) -> type:
         """Registra uma classe para carregar eventos de instâncias dessa classe."""
         
-        self._classes[cls.__qualname__] = cls
-        self._objects[cls.__qualname__] = []
+        self.set_cls(cls)
 
         original_init = cls.__init__
         @wraps(original_init)
         def __init__(*args, **kwargs) -> None:
             original_init(*args, **kwargs)
-            self._objects[cls.__qualname__].append(args[0])
+            self.add_object(args[0])
 
         cls.__init__ = __init__
         return cls
@@ -173,6 +172,13 @@ class BaseInterface(Base):
             self._frame(screen)
         for it in self.get_activated():
             it._run_frame(screen)
+            
+    def set_cls(self, cls: type) -> None:
+        self._classes[cls.__qualname__] = cls
+        self._objects[cls.__qualname__] = []
+
+    def add_object(self, obj: object) -> None:
+        self._objects[obj.__class__.__qualname__].append(obj)
 
 
 
