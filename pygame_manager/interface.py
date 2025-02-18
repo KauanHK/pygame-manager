@@ -217,7 +217,7 @@ class Interface(BaseInterface):
     def deactivate(self) -> None:
         self._is_activated = False
 
-    def register_subinterface(self, interface: Self) -> None:
+    def register_interface(self, interface: Self) -> None:
         """Registra uma interface."""
 
         self._interfaces.append(interface)
