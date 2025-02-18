@@ -1,9 +1,9 @@
 import pygame as pg
 from .event import LoadingEvent, Event
-from .utils import SwitchInterface, FuncEvent
+from .utils import SwitchInterface, FuncEvent, FuncFrame, EventsClass
 from functools import wraps
 from abc import ABC, abstractmethod
-from typing import Callable, Self
+from typing import Callable, Self, Any
 
 
 class Base(ABC):
@@ -13,6 +13,7 @@ class Base(ABC):
 
     @property
     def activated_interfaces(self) -> list[Self]:
+        """As interfaces ativas."""
         return list(filter(lambda it: it.is_activated, self._interfaces))
 
     @abstractmethod
@@ -28,9 +29,11 @@ class Base(ABC):
 class BaseInterface(Base):
 
     def __init__(self) -> None:
+        """Base para interfaces. Gerencia eventos e frames."""
+
+        super().__init__()
 
         # Registro de eventos
-        super().__init__()
         self._owners: dict[str, list[LoadingEvent]] = {}
         self._classes: dict[str, type] = {}
         self._objects: dict[str, list[object]] = {}
@@ -59,7 +62,14 @@ class BaseInterface(Base):
         for it in self._interfaces:
             it.init()
 
-    def add_event(self, func: FuncEvent, event_type: int, params: tuple[str, ...] = (), **kwargs) -> None:
+    def add_event(self, func: FuncEvent, event_type: int, params: tuple[str, ...] = (), **kwargs: Any) -> None:
+        """Adiciona um evento para a lista de eventos.
+
+        :param FuncEvent func: A função a ser adicionada.
+        :param int event_type: O tipo do evento pygame.
+        :param tuple params: Os parâmetros que devem ser passados ao chamar a função.
+        :param Any kwargs: O valor do(s) atributos do evento pygame.
+        """
 
         event = LoadingEvent(func, event_type, params, **kwargs)
         owner = '.'.join(func.__qualname__.split('.')[:-1])
@@ -68,10 +78,10 @@ class BaseInterface(Base):
         self._owners[owner].append(event)
 
     def event(self, event_type: int, params: tuple[str, ...] = (), **kwargs) -> Callable[[FuncEvent], FuncEvent]:
-        """Registra uma função ou método. 
+        """Registra uma função ou método.
         Se for um método, é necessário registrar a classe em que está inserido.
 
-        A função/método será chamada durante a execução do jogo 
+        A função/método será chamado durante a execução do jogo
         quando houver um evento pygame do tipo *event_type* 
         e as condições passadas em *kwargs* forem verdadeiras, 
         passando os parâmetros especificados em *params*.
@@ -85,35 +95,6 @@ class BaseInterface(Base):
         :param Any, Opcional kwargs:
             Os atributos do evento pygame. Usado para verificar se o valor do(s) 
             atributo(s) do evento são iguais aos especificados.
-
-        Exemplos
-        --------
-
-            ```python
-            @interface.event(pygame.MOUSEBUTTONDOWN, params = ('pos', 'button'))
-            def click(pos, button):
-                if button == pygame.BUTTON_LEFT and button_rect.collidepoint(pos):
-                    switch_interface('game')
-
-            @interface.event(
-                pygame.MOUSEBUTTONDOWN,
-                button = pygame.BUTTON_LEFT,
-                pos = lambda pos: button_rect.collidepoint(pos)
-            )
-            def click():
-                switch_interface('game')
-
-            @interface.register_cls
-            class Button:
-                ...
-                @interface.event(
-                    pygame.MOUSEBUTTONDOWN,
-                    button = pygame.BUTTON_LEFT,
-                    pos = lambda self, pos: button_rect.collidepoint(pos)
-                )
-                def click(self):
-                    switch_interface('game')
-            ```
         """
 
         def decorator(f: FuncEvent) -> FuncEvent:
@@ -122,8 +103,16 @@ class BaseInterface(Base):
 
         return decorator
     
-    def register_cls(self, cls: type) -> type:
-        """Registra uma classe para carregar eventos de instâncias dessa classe."""
+    def register_cls(self, cls: type[EventsClass]) -> type[EventsClass]:
+        """Registra uma classe para carregar eventos dela.
+
+        Necessário para registrar eventos como métodos e chamá-los passando
+        a instância como primeiro parâmetro. Decora o seu __init__ para
+        registrar todas as instâncias criadas.
+
+        :param type cls: A classe a ser registrada.
+        :return: A própria classe.
+        """
         
         self.set_cls(cls)
 
@@ -136,12 +125,21 @@ class BaseInterface(Base):
         cls.__init__ = __init__
         return cls
     
-    def frame(self, frame: Callable) -> None:
-        """Registra um frame para a interface."""
-        self._frame = frame
+    def frame(self, func: FuncFrame) -> FuncFrame:
+        """Registra um frame para a interface.
+
+        :param FuncFrame func: A função do frame.
+        :return FuncFrame: A própria função do frame.
+        """
+        self._frame = func
+        return func
 
     def run_event(self, pygame_event: pg.event.Event) -> None:
+        """Executa um evento pygame e faz a troca de interfaces.
 
+        :param pygame_event: O evento pygame.
+        :return: None.
+        """
         try:
             self._run_event(pygame_event)
         except SwitchInterface as e:
@@ -156,9 +154,10 @@ class BaseInterface(Base):
                 raise e
             
     def _run_event(self, pygame_event: pg.event.Event) -> None:
-        """Processa os eventos carregados.
+        """Executa um evento pygame.
         
-        :param pygame.event.Event pygame_event: O evento pygame.
+        :param pygame_event: O evento pygame.
+        :return: None.
         """
 
         activated = self.activated_interfaces
@@ -168,18 +167,42 @@ class BaseInterface(Base):
             it.run_event(pygame_event)
 
     def _run_frame(self, screen: pg.Surface) -> None:
-        """Executa um frame, primeiro o frame global, se tiver, e o frame da interface."""
+        """Executa o frame da interface e o das subinterfaces ativas. Primeiro,
+        é executado seu frame e depois o das subinterfaces ativas.
+
+        :param pg.Surface screen: A tela onde será desenhado o frame.
+        """
 
         if self._frame is not None:
             self._frame(screen)
         for it in self.activated_interfaces:
             it._run_frame(screen)
             
-    def set_cls(self, cls: type) -> None:
+    def set_cls(self, cls: type[EventsClass]) -> None:
+        """Registra uma classe para carregar seus eventos e retorna None.
+
+        A diferença para register_cls() é que o __init__ da classe não é decorado,
+        portanto não garante que os eventos de instâncias dessa classe sejam carregados.
+        Use set_cls para registrar classes com eventos em múltiplas interfaces, ou
+        use o decorador Group.register_cls().
+
+        :param cls: A classe a ser registrada.
+        :return: None.
+        """
         self._classes[cls.__qualname__] = cls
         self._objects[cls.__qualname__] = []
 
     def add_object(self, obj: object) -> None:
+        """Adiciona um objeto a lista de objetos de sua classe.
+
+        É necessário registrar a classe antes de adicionar o
+        objeto, caso contrário, lança um KeyError.
+        Ao registrar um objeto, seus eventos serão executados.
+        Para adicionar todos os objetos automaticamente, use
+        o decorador Interface.register_cls() ou Group.register_cls().
+
+        :param obj: O objeto a ser adicionado.
+        """
         self._objects[obj.__class__.__qualname__].append(obj)
 
 
