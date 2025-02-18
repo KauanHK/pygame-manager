@@ -1,6 +1,7 @@
 from .interface import Interface, get_interface, Base
 from .utils import FuncEvent
 from functools import wraps
+from typing import Callable
 
 
 class Group(Base):
@@ -28,29 +29,35 @@ class Group(Base):
         for it in self._interfaces:
             it.add_event(func, event_type, params, **kwargs)
 
-    def event(self, event_type: int, params: tuple[str, ...] = (), **kwargs):
+    def event(self, event_type: int, params: tuple[str, ...] = (), **kwargs) -> Callable[[FuncEvent], FuncEvent]:
     
         def decorator(f: FuncEvent) -> FuncEvent:
-            
             for it in self._interfaces:
                 it.add_event(f, event_type, params, **kwargs)
-
-            return f
+            return self._wrapper(f)
         
         return decorator
     
     def register_cls(self, cls: type) -> type:
-
-        for it in self._interfaces:
-            it._classes[cls.__qualname__] = cls
-            it._objects[cls.__qualname__] = []
 
         original_init = cls.__init__
         @wraps(original_init)
         def __init__(*args, **kwargs) -> None:
             original_init(*args, **kwargs)
             for it in self._interfaces:
-                it._objects[cls.__qualname__].append(args[0])
+                it.add_object(args[0])
 
         cls.__init__ = __init__
         return cls
+
+    def _wrapper(self, func: FuncEvent) -> FuncEvent:
+        @wraps(func)
+        def wrapper(*args, **kwargs) -> None:
+            for it in self._interfaces:
+                if it.is_activated():
+                    func(*args, **kwargs)
+        return wrapper
+
+    def _set_cls(self, cls: type) -> None:
+        for it in self._interfaces:
+            it.set_cls(cls)
