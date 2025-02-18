@@ -1,6 +1,6 @@
 import pygame as pg
 from .event import LoadingEvent, Event
-from .utils import SwitchInterface, FuncEvent, FuncFrame, EventsClass
+from .utils import SwitchInterface, FuncEvent, FuncFrame, EventsClass, ActivatedInterfaceError, DeactivatedInterfaceError
 from functools import wraps
 from abc import ABC, abstractmethod
 from typing import Callable, Self, Any
@@ -235,13 +235,21 @@ class Interface(BaseInterface):
         return self._is_activated
 
     def activate(self) -> None:
+        if self._is_activated:
+            raise ActivatedInterfaceError(f'Interface {self.name} já está ativa.')
         self._is_activated = True
 
     def deactivate(self) -> None:
+        if not self._is_activated:
+            raise DeactivatedInterfaceError(f'Interface {self.name} já está desativada.')
         self._is_activated = False
 
     def register_interface(self, interface: Self) -> None:
-        """Registra uma interface."""
+        """Registra uma interface.
+
+        :param Interface interface: A interface a ser registrada.
+        :return: None.
+        """
 
         self._interfaces.append(interface)
 
@@ -258,7 +266,13 @@ def get_interface(name: str) -> Interface:
     return Interface.objects[name]
 
 def activate_interface(name: str) -> None:
+    """Ativa a interface com o nome fornecido. Caso a interface já esteja ativa,
+    lança um ActivatedInterfaceError.
+    """
     get_interface(name).activate()
 
 def deactivate_interface(name: str) -> None:
+    """Desativa a interface com o nome fornecido. Caso a interface já esteja desativada,
+    lança um DeactivatedInterfaceError.
+    """
     get_interface(name).deactivate()
