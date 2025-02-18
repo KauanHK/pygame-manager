@@ -3,6 +3,8 @@ from typing import Callable, NoReturn, TypeVar, Any
 
 
 FuncEvent = TypeVar('FuncEvent', bound = Callable[..., Any])
+FuncFrame = TypeVar('FuncFrame', bound = Callable[[pg.Surface], Any])
+EventsClass = TypeVar('EventsClass', bound = type)
 
 class QuitPygame(BaseException): ...
 
