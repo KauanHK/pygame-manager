@@ -8,8 +8,12 @@ from typing import Callable, Self
 
 class Base(ABC):
 
-    def get_activated(self) -> list[Self]:
-        return list(filter(lambda it: it.is_activated(), self._interfaces))
+    def __init__(self):
+        self._interfaces: list[Interface] = []
+
+    @property
+    def activated_interfaces(self) -> list[Self]:
+        return list(filter(lambda it: it.is_activated, self._interfaces))
 
     @abstractmethod
     def add_event(self, func: FuncEvent, event_type: int, params: tuple[str, ...] = (), **kwargs) -> None: ...
@@ -26,15 +30,13 @@ class BaseInterface(Base):
     def __init__(self) -> None:
 
         # Registro de eventos
+        super().__init__()
         self._owners: dict[str, list[LoadingEvent]] = {}
         self._classes: dict[str, type] = {}
         self._objects: dict[str, list[object]] = {}
 
         # Eventos finais (carregados)
         self._events: dict[int, list[Event]] = {}
-
-        # Subinterfaces registradas
-        self._interfaces: list[Interface] = []
 
         # Frame da interface
         self._frame = None
@@ -159,7 +161,7 @@ class BaseInterface(Base):
         :param pygame.event.Event pygame_event: O evento pygame.
         """
 
-        activated = self.get_activated()
+        activated = self.activated_interfaces
         for event in self._events.get(pygame_event.type, []):
             event.run(pygame_event)
         for it in activated:
@@ -170,7 +172,7 @@ class BaseInterface(Base):
 
         if self._frame is not None:
             self._frame(screen)
-        for it in self.get_activated():
+        for it in self.activated_interfaces:
             it._run_frame(screen)
             
     def set_cls(self, cls: type) -> None:
@@ -205,6 +207,7 @@ class Interface(BaseInterface):
     def name(self) -> str:
         return self._name
 
+    @property
     def is_activated(self) -> bool:
         return self._is_activated
 

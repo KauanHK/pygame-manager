@@ -7,7 +7,7 @@ from typing import Callable
 def _wrapper(func: FuncEvent) -> FuncEvent:
     @wraps(func)
     def wrapper(*args, **kwargs) -> None:
-        if args[0].interface.is_activated():
+        if args[0].interface.is_activated:
             func(*args, **kwargs)
     return wrapper
 
@@ -16,12 +16,11 @@ class Group(Base):
 
     def __init__(self, *interfaces: Interface | str) -> None:
         
-        self._interfaces: list[Interface] = []
+        super().__init__()
         for it in interfaces:
             if isinstance(it, str):
                 it = get_interface(it)
             self._interfaces.append(it)
-
 
     def add(self, interface: Interface) -> None:
         self._interfaces.append(interface)
