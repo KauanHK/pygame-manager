@@ -4,6 +4,14 @@ from functools import wraps
 from typing import Callable
 
 
+def _wrapper(func: FuncEvent) -> FuncEvent:
+    @wraps(func)
+    def wrapper(*args, **kwargs) -> None:
+        if args[0].interface.is_activated():
+            func(*args, **kwargs)
+    return wrapper
+
+
 class Group(Base):
 
     def __init__(self, *interfaces: Interface | str) -> None:
@@ -34,7 +42,7 @@ class Group(Base):
         def decorator(f: FuncEvent) -> FuncEvent:
             for it in self._interfaces:
                 it.add_event(f, event_type, params, **kwargs)
-            return self._wrapper(f)
+            return _wrapper(f)
         
         return decorator
     
@@ -51,13 +59,6 @@ class Group(Base):
 
         cls.__init__ = __init__
         return cls
-
-    def _wrapper(self, func: FuncEvent) -> FuncEvent:
-        @wraps(func)
-        def wrapper(*args, **kwargs) -> None:
-            if args[0].interface.is_activated():
-                func(*args, **kwargs)
-        return wrapper
 
     def _set_cls(self, cls: type) -> None:
         for it in self._interfaces:
