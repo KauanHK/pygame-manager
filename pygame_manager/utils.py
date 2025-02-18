@@ -34,3 +34,7 @@ class SwitchInterface(BaseException):
 
 def switch_interface(name: str) -> Callable[[], NoReturn]:
     raise SwitchInterface(name)
+
+
+class ActivatedInterfaceError(BaseException): ...
+class DeactivatedInterfaceError(BaseException): ...
