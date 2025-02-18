@@ -4,7 +4,11 @@ from functools import wraps
 from typing import Callable
 
 
-def _wrapper(func: FuncEvent) -> FuncEvent:
+def _multiple_interfaces_wrapper(func: FuncEvent) -> FuncEvent:
+    """Decora uma eventos para que ele seja executado apenas nas interfaces ativas.
+
+    :param FuncEvent func: A função do evento.
+    """
     @wraps(func)
     def wrapper(*args, **kwargs) -> None:
         if args[0].interface.is_activated:
@@ -15,7 +19,10 @@ def _wrapper(func: FuncEvent) -> FuncEvent:
 class Group(Base):
 
     def __init__(self, *interfaces: Interface | str) -> None:
-        
+        """Agrupa interfaces para registrar eventos de maneira mais simples.
+
+        :param interfaces: Interfaces a serem agrupadas.
+        """
         super().__init__()
         for it in interfaces:
             if isinstance(it, str):
@@ -43,7 +50,7 @@ class Group(Base):
         def decorator(f: FuncEvent) -> FuncEvent:
             for it in self._interfaces:
                 it.add_event(f, event_type, params, **kwargs)
-            return _wrapper(f)
+            return _multiple_interfaces_wrapper(f)
         
         return decorator
     
