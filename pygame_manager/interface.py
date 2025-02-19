@@ -12,9 +12,9 @@ class Base(ABC):
         self._interfaces: list[Interface] = []
 
     @property
-    def activated_interfaces(self) -> list[Self]:
+    def active_interfaces(self) -> list[Self]:
         """As interfaces ativas."""
-        return list(filter(lambda it: it.is_activated, self._interfaces))
+        return list(filter(lambda it: it.is_active, self._interfaces))
 
     @abstractmethod
     def add_event(self, func: FuncEvent, event_type: int, params: tuple[str, ...] = (), **kwargs) -> None: ...
@@ -160,7 +160,7 @@ class BaseInterface(Base):
         :return: None.
         """
 
-        activated = self.activated_interfaces
+        activated = self.active_interfaces
         for event in self._events.get(pygame_event.type, []):
             event.run(pygame_event)
         for it in activated:
@@ -175,7 +175,7 @@ class BaseInterface(Base):
 
         if self._frame is not None:
             self._frame(screen)
-        for it in self.activated_interfaces:
+        for it in self.active_interfaces:
             it._run_frame(screen)
             
     def set_cls(self, cls: type[EventsClass]) -> None:
@@ -231,7 +231,7 @@ class Interface(BaseInterface):
         return self._name
 
     @property
-    def is_activated(self) -> bool:
+    def is_active(self) -> bool:
         return self._is_activated
 
     def activate(self) -> None:

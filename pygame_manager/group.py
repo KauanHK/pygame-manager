@@ -11,7 +11,7 @@ def _multiple_interfaces_wrapper(func: FuncEvent) -> FuncEvent:
     """
     @wraps(func)
     def wrapper(*args, **kwargs) -> None:
-        if args[0].interface.is_activated:
+        if args[0].interface.is_active:
             func(*args, **kwargs)
     return wrapper
 
