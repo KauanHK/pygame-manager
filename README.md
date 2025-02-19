@@ -37,7 +37,7 @@ from pygame_manager import get_interface
 
 example_interface = get_interface('example')
 ```
-Isso retorna a instância já criada com o nome '*game*'. 
+Isso retorna a instância já criada com o nome fornecido. 
 Caso não exista nenhuma interface com o nome fornecido, lança uma exceção.
 
 ### Subinterfaces
