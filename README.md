@@ -61,9 +61,19 @@ def iniciar_jogo():
 
 ## Conceitos Principais 🔧
 
-### 1. Gerenciamento de Interfaces
+O Pygame Manager faz o gerenciamento das interfaces do jogo. 
+As interfaces facilitam o desenvolvimento modular de diferentes telas 
+e o tratamento dos eventos. Elas podem ter:
+- **Subinterfaces**: Interfaces que são rodadas por cima da interface pai, 
+como um popup.
+- **Frames**: A renderização da interface na tela.
+- **Eventos**: Possui seus próprios eventos de maneira independente.
 
-#### Criando Interfaces
+### 1. Interfaces
+
+Para criar uma interface, basta import `Interface` e dar um nome a ela. 
+Esse nome é deve ser único e não pode ser alterado.
+
 ```python
 from pygame_manager import Interface
 
@@ -75,6 +85,10 @@ interface_jogo.register_interface(menu_pausa)
 ```
 
 #### Ativação de Interfaces
+
+A interface deve ser ativada para ser executada. 
+Use `interface.activate()` ou `activate_interface(interface)`
+
 ```python
 def alternar_pausa():
     if menu_pausa.active:
@@ -87,53 +101,23 @@ def alternar_pausa():
 - Não afeta outras interfaces  
 - **Permitem sobreposição**: Você pode ter múltiplas interfaces ativas simultaneamente (útil para popups, menus em camadas).
 
-#### Exemplo Prático:
-```python
-interface_jogo.activate()       # Interface do jogo principal
-menu_pausa.activate()           # Adiciona menu de pausa por cima
-```
-**Resultado**: Ambas as interfaces estarão ativas e processando eventos e draws.
-
 ---
 
 ### Como funciona **`switch_interface()`**  
 - **Troca global de contexto**: Desativa **todas** as interfaces ativas e ativa apenas a especificada.  
-- **Uso típico**: Transições entre telas principais (ex: menu → jogo, jogo → game over).  
-- **Funcionamento interno**:
-  1. Lança a exceção `SwitchInterface` com o nome da interface alvo.
-  2. O bloco `try` em `run_event` captura a exceção.
-  3. **Desativa todas as interfaces** (`it.deactivate()` no loop).
-  4. **Ativa apenas a interface alvo** (se existir).
+- **Uso típico**: Transições entre telas principais (ex: menu → jogo, jogo → game over).
+
+**Note:** `switch_interface()` lança uma exceção, portanto use no **final** de sua função para que toda ela seja executada.
+
 
 #### Exemplo Prático:
+
 ```python
-switch_interface('menu_principal')  # Desativa todas interfaces e ativa o menu
+@menu.event(pygame.KEYDOWN, key = pygame.K_ESCAPE)
+def retornar_menu():
+   ...
+   switch_interface('menu_principal')  # Executado no final da função
 ```
-
----
-
-### Diferença Chave ✨
-| Característica          | `activate()`/`deactivate()` | `switch_interface()`          |
-|-------------------------|-----------------------------|-------------------------------|
-| **Escopo**              | Interface específica        | Todas as interfaces           |
-| **Sobreposição**        | Permite                    | Desativa tudo antes de ativar |
-| **Casos de Uso**        | Popups, submenus           | Troca de telas principais     |
-| **Controle de Estado**  | Manual                     | Automático (global)           |
-
----
-
-### Quando Usar Cada Um?
-1. **`activate()`**:  
-   - Adicionar elementos temporários (ex: diálogo de confirmação).  
-   - Sistemas de pause/menus sobrepostos.  
-   ```python
-   # Exemplo: Pausar o jogo sem fechá-lo
-   def toggle_pause():
-       if menu_pausa.active:
-           menu_pausa.deactivate()
-       else:
-           menu_pausa.activate()
-   ```
 
 2. **`switch_interface()`**:  
    - Transições entre estados globais (ex: tela inicial → novo jogo).  
@@ -149,6 +133,11 @@ switch_interface('menu_principal')  # Desativa todas interfaces e ativa o menu
 ### 2. Tratamento de Eventos
 
 #### Registro Básico de Eventos
+
+Os eventos devem ser registrados em interfaces. Para registrar um evento 
+global, registre-o na instância de Game. O evento recebe o tipo do evento pygame, 
+os parâmetros que devem ser passados para a função, e kwargs.
+
 ```python
 @interface.event(pygame.KEYDOWN, key=pygame.K_ESCAPE)
 def tratar_escape():
@@ -156,6 +145,10 @@ def tratar_escape():
 ```
 
 #### Componentes Baseados em Classes
+
+Para criar eventos em métodos, é necessário registrar a classe. 
+Dessa forma, o evento será chamado para as instâncias da classe.
+
 ```python
 @interface.register_cls
 class Jogador:
@@ -167,11 +160,9 @@ class Jogador:
         self.rect.x += 10
 ```
 
-Entendi perfeitamente! Vou reescrever essa seção com uma explicação precisa do funcionamento dos grupos:
-
 ---
 
-## 3. Gerenciamento de Grupos 🎚️
+### 3. Gerenciamento de Grupos 🎚️
 
 Gerencie eventos que devem funcionar em múltiplas interfaces.
 
@@ -224,27 +215,16 @@ def renderizar_jogo(screen):
 
 ---
 
-## Uso Avançado 🧠
+## Encerramento seguro
 
-### Transição Entre Interfaces
-```python
-from pygame_manager import switch_interface
-
-@interface.register_cls
-class Botao:
-    def __init__(self, interface_alvo):
-        self.alvo = interface_alvo
-    
-    @interface.event(
-        pygame.MOUSEBUTTONDOWN,
-        button=pygame.BUTTON_LEFT,
-        pos=lambda self, pos: self.rect.collidepoint(pos)
-    )
-    def navegar(self):
-        switch_interface(self.alvo)
-```
+A instância de Game, por padrão, registra um evento de saída do jogo. 
+O pygame será sempre fechado corretamente, mesmo que uma exceção ocorra.
 
 ### Controle Personalizado de Saída
+
+Se quiser definir uma função para fechar o jogo, crie a instância de Game 
+passando o parâmetro `quit = False`
+
 ```python
 game = Game(quit=False)  # Desativa o tratamento padrão de saída
 
@@ -255,6 +235,7 @@ def saida_personalizada():
     print("Salvando estado do jogo...")
     quit_pygame()
 ```
+**Note:** Somente uma função de saída do jogo pode ser registrada.
 
 ---
 
