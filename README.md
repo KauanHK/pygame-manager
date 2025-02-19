@@ -78,10 +78,73 @@ interface_jogo.register_interface(menu_pausa)
 ```python
 def alternar_pausa():
     if menu_pausa.active:
-        menu_pausa.deactivate()
+        menu_pausa.deactivate()  # Você também pode usar deactivate('menu_pausa')
     else:
-        menu_pausa.activate()
+        menu_pausa.activate()  # Ou activate('menu_pausa')
 ```
+### Como funciona `activate()/deactivate()`
+- Ativa/desativa uma interface específica diretamente.  
+- Não afeta outras interfaces  
+- **Permitem sobreposição**: Você pode ter múltiplas interfaces ativas simultaneamente (útil para popups, menus em camadas).
+
+#### Exemplo Prático:
+```python
+interface_jogo.activate()       # Interface do jogo principal
+menu_pausa.activate()           # Adiciona menu de pausa por cima
+```
+**Resultado**: Ambas as interfaces estarão ativas e processando eventos e draws.
+
+---
+
+### Como funciona **`switch_interface()`**  
+- **Troca global de contexto**: Desativa **todas** as interfaces ativas e ativa apenas a especificada.  
+- **Uso típico**: Transições entre telas principais (ex: menu → jogo, jogo → game over).  
+- **Funcionamento interno**:
+  1. Lança a exceção `SwitchInterface` com o nome da interface alvo.
+  2. O bloco `try` em `run_event` captura a exceção.
+  3. **Desativa todas as interfaces** (`it.deactivate()` no loop).
+  4. **Ativa apenas a interface alvo** (se existir).
+
+#### Exemplo Prático:
+```python
+switch_interface('menu_principal')  # Desativa todas interfaces e ativa o menu
+```
+
+---
+
+### Diferença Chave ✨
+| Característica          | `activate()`/`deactivate()` | `switch_interface()`          |
+|-------------------------|-----------------------------|-------------------------------|
+| **Escopo**              | Interface específica        | Todas as interfaces           |
+| **Sobreposição**        | Permite                    | Desativa tudo antes de ativar |
+| **Casos de Uso**        | Popups, submenus           | Troca de telas principais     |
+| **Controle de Estado**  | Manual                     | Automático (global)           |
+
+---
+
+### Quando Usar Cada Um?
+1. **`activate()`**:  
+   - Adicionar elementos temporários (ex: diálogo de confirmação).  
+   - Sistemas de pause/menus sobrepostos.  
+   ```python
+   # Exemplo: Pausar o jogo sem fechá-lo
+   def toggle_pause():
+       if menu_pausa.active:
+           menu_pausa.deactivate()
+       else:
+           menu_pausa.activate()
+   ```
+
+2. **`switch_interface()`**:  
+   - Transições entre estados globais (ex: tela inicial → novo jogo).  
+   - Resetar o estado do jogo (ex: voltar ao menu após game over).  
+   ```python
+   # Exemplo: Iniciar novo jogo
+   def iniciar_novo_jogo():
+       switch_interface('jogo')
+   ```
+
+---
 
 ### 2. Tratamento de Eventos
 
@@ -120,7 +183,7 @@ class BotaoUI:
         button=pygame.BUTTON_LEFT,
         pos=lambda self, pos: self.rect.collidepoint(pos)
     )
-    def ao_clicar(self):
+    def click(self):
         print("Botão clicado!")
 ```
 
@@ -141,7 +204,7 @@ def renderizar_jogo(screen):
 from pygame_manager import switch_interface
 
 @interface.register_cls
-class BotaoMenu:
+class Botao:
     def __init__(self, interface_alvo):
         self.alvo = interface_alvo
     
@@ -158,31 +221,13 @@ class BotaoMenu:
 ```python
 game = Game(quit=False)  # Desativa o tratamento padrão de saída
 
+# Você pode registrar mais de um evento para a mesma função
 @game.event(pygame.QUIT)
 @game.event(pygame.KEYDOWN, key=pygame.K_q)
 def saida_personalizada():
     print("Salvando estado do jogo...")
     quit_pygame()
 ```
-
----
-
-## Melhores Práticas ✅
-
-1. **Organização de Interfaces**
-   - Mantenha elementos relacionados em suas próprias interfaces
-   - Use convenções claras de nomes (`menu_principal`, `inventario`, etc.)
-   - Evite manipulação direta - prefira `switch_interface()`
-
-2. **Gerenciamento de Eventos**
-   - Prefira componentes baseados em classes para elementos com estado
-   - Use predicados lambda para condições complexas
-   - Mantenha handlers de eventos com responsabilidade única
-
-3. **Performance**
-   - Desative interfaces não utilizadas
-   - Use grupos para componentes entre interfaces
-   - Agrupe chamadas de desenho nos frames
 
 ---
 
@@ -211,13 +256,3 @@ Contribuições são bem-vindas! Siga estes passos:
 3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
 4. Push para a branch (`git push origin feature/nova-funcionalidade`)
 5. Abra um Pull Request
-
----
-
-Esta versão apresenta:
-- Estrutura hierárquica clara
-- Blocos de código com syntax highlighting
-- Badges visuais para rápida identificação
-- Exemplos práticos de uso
-- Orientações para arquitetura baseada em componentes
-- Tom profissional porém acessível
