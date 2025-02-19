@@ -21,41 +21,71 @@ Caso queira usar no seu projeto, instale com o pip:
 pip install git+https://github.com/KauanHK/pygame-manager
 ```
 
+Here’s an improved version of your README section with clearer structure, explanations, and examples:
+
+---
+
 ## Interfaces
-Criação de uma interface:
+
+### Criar interface
+Para criar uma interface, use a classe Interface. 
+É exigido um nome, o qual deve ser único.
 ```python
 from pygame_manager import Interface
 
-interface = Interface('example')
-```
-O parâmetro **name** é obrigatório. Ele serve para identificar a interface e não pode ser alterado.
+# Cria uma interface com o nome 'main_menu'
+main_menu = Interface(name='main_menu')
+```  
+**Note:** O nome serve como um identificador da interface e seu nome não pode ser alterado.
 
-Você pode pegar uma determinada interface com **get_interface**.
-Isso evita dores de cabeça com 'circular import' caso use a interface em diferentes módulos.
+---
+
+### Retrieving an Existing Interface
+
+Para evitar importação circular e acessar interfaces em diferentes módulos, 
+use `get_interface(name)` para pegar uma instância já criada.
+
 ```python
 from pygame_manager import get_interface
 
-example_interface = get_interface('example')
-```
-Isso retorna a instância já criada com o nome fornecido. 
-Caso não exista nenhuma interface com o nome fornecido, lança uma exceção.
+# Pega a interface 'main_menu'
+main_menu = get_interface('main_menu')
+```  
+**Importante:**
+- Se nenhuma interface com o nome indicado existir, lança uma exceção.
+- Sempre crie a interface antes de carregá-la em outros módulos. 
 
-### Subinterfaces
-Você pode registrar subinterfaces. 
-Em um jogo que mostra um popup de game over quando o jogador perde 
-pode registrar esse popup como uma subinterface.
+---
+
+### Subinterfaces (Child Interfaces)
+
+Você pode criar subinterfaces, como popups, menus de pause ou telas de game over.
+ 
+1. **Registre as subinterfaces**:  
+   Use `interface.register_interface(child_interface)` para registrar uma subinterface em uma interface.  
+
+2. **Activate/Deactivate**:  
+   Chame `activate()` ou `deactivate()` para a subinterface.  
+
+#### Examplo: Game Over Popup  
 ```python
-game = Interface('game')
-game_over = Interface('game_over')
+# Interface do jogo
+game_interface = Interface(name='game')
 
-game.register_interface(game_over)
+# Subinterface da tela de game-over
+game_over = Interface(name='game_over')
+game_interface.register_interface(game_over)
 
-def collided_wall():
-    if player.collide_wall():
-        game_over.activate()
+def check_player_collision():
+    if player.collided_with_wall():
+        game_over.activate()  # Ativa a subinterface 'game_over'
 ```
-Nesse exemplo, quando o player colidir com uma parede, 
-a subinterface game_over será ativada.
+Primeiro são executados as interfaces de nível mais global, ou seja, 
+a interface 'game' será executada antes da de 'game_over'. Para desativar 
+uma interface, use `interface.deactivate()`.
+
+Você também pode ativar ou desativar pelo seu nome com 
+`activate('game_over')` ou `deactivate('game_over')`
 
 ## Eventos
 Os eventos são registrados nas interfaces.
