@@ -167,25 +167,52 @@ class Jogador:
         self.rect.x += 10
 ```
 
-### 3. Gerenciamento de Grupos
+Entendi perfeitamente! Vou reescrever essa seção com uma explicação precisa do funcionamento dos grupos:
+
+---
+
+## 3. Gerenciamento de Grupos 🎚️
+
+Gerencie eventos que devem funcionar em múltiplas interfaces.
+
+### Como Funcionam os Grupos?
+1. **Associação de Interfaces**: Vincule interfaces ao criar o grupo
+2. **Processamento**: Os eventos só serão executados nas interfaces do grupo que estiverem ativas.
+
+### Exemplo Prático:
 ```python
 from pygame_manager import Group
+import pygame
 
-grupo_ui = Group('menu_principal', 'menu_pausa')
+# Grupo contendo menu principal e game over
+grupo_ui = Group('menu_principal', 'game_over')
 
 @grupo_ui.register_cls
-class BotaoUI:
-    def __init__(self, texto):
-        self.rect = pygame.Rect(0, 0, 100, 40)
-        
+class Botao:
+    def __init__(self, interface, texto, posicao):
+        self.interface = interface
+        self.rect = pygame.Rect(posicao[0], posicao[1], 200, 50)
+        self.texto = texto
+
     @grupo_ui.event(
         pygame.MOUSEBUTTONDOWN,
         button=pygame.BUTTON_LEFT,
         pos=lambda self, pos: self.rect.collidepoint(pos)
     )
     def click(self):
-        print("Botão clicado!")
+        print(f"Botão {self.texto} pressionado!")
+
+# Criação dos botões
+botao_menu = Botao('menu_principal', "Novo Jogo", (100, 200))
+botao_game_over = Botao('game_over', "Reiniciar", (100, 300))
 ```
+
+### Comportamento em Diferentes Estados:
+| Estado da Interface      | Botão do Menu | Botão do Game Over |
+|--------------------------|---------------|--------------------|
+| **Menu Principal Ativo** | ✅ Funciona    | 🚫 Não existe      |
+| **Jogo Ativo**           | 🚫 Inativo    | 🚫 Inativo         |
+| **Game Over Ativo**      | 🚫 Não existe | ✅ Funciona        |
 
 ### 4. Renderização de Telas
 ```python
