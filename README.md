@@ -69,7 +69,7 @@ como um popup.
 - **Frames**: A renderização da interface na tela.
 - **Eventos**: Possui seus próprios eventos de maneira independente.
 
-### 1. Interfaces
+## 1. Interfaces
 
 Para criar uma interface, basta import `Interface` e dar um nome a ela. 
 Esse nome é deve ser único e não pode ser alterado.
@@ -84,7 +84,9 @@ menu_pausa = Interface(name='menu_pausa')
 interface_jogo.register_interface(menu_pausa)
 ```
 
-#### Ativação de Interfaces
+---
+
+### Ativação de Interfaces
 
 A interface deve ser ativada para ser executada. 
 Use `interface.activate()` ou `activate_interface(interface)`
@@ -100,8 +102,6 @@ def alternar_pausa():
 - Ativa/desativa uma interface específica diretamente.  
 - Não afeta outras interfaces  
 - **Permitem sobreposição**: Você pode ter múltiplas interfaces ativas simultaneamente (útil para popups, menus em camadas).
-
----
 
 ### Como funciona **`switch_interface()`**  
 - **Troca global de contexto**: Desativa **todas** as interfaces ativas e ativa apenas a especificada.  
@@ -130,9 +130,7 @@ def retornar_menu():
 
 ---
 
-### 2. Tratamento de Eventos
-
-#### Registro Básico de Eventos
+## 2. Tratamento de Eventos
 
 Os eventos devem ser registrados em interfaces. Para registrar um evento 
 global, registre-o na instância de Game. O evento recebe o tipo do evento pygame, 
@@ -144,7 +142,7 @@ def tratar_escape():
     alternar_pausa()
 ```
 
-#### Componentes Baseados em Classes
+### Componentes Baseados em Classes
 
 Para criar eventos em métodos, é necessário registrar a classe. 
 Dessa forma, o evento será chamado para as instâncias da classe.
@@ -162,7 +160,7 @@ class Jogador:
 
 ---
 
-### 3. Gerenciamento de Grupos 🎚️
+## 3. Gerenciamento de Grupos 🎚️
 
 Gerencie eventos que devem funcionar em múltiplas interfaces.
 
@@ -205,7 +203,11 @@ botao_game_over = Botao('game_over', "Reiniciar", (100, 300))
 | **Jogo Ativo**           | 🚫 Inativo    | 🚫 Inativo         |
 | **Game Over Ativo**      | 🚫 Não existe | ✅ Funciona        |
 
-### 4. Renderização de Telas
+## 4. Renderização de Telas
+
+Registra o frame da interface. É executado uma vez a cada frame e somente 
+se a interface estiver ativa.
+
 ```python
 @interface.frame
 def renderizar_jogo(screen):
@@ -215,13 +217,14 @@ def renderizar_jogo(screen):
 
 ---
 
-## Encerramento seguro
+## Saída do pygame segura
 
-A instância de Game, por padrão, registra um evento de saída do jogo. 
-O pygame será sempre fechado corretamente, mesmo que uma exceção ocorra.
+O pygame será sempre fechado corretamente, mesmo que uma exceção ocorra. 
+O jogo pode até mesmo ser fechado com `ctrl+c`
 
 ### Controle Personalizado de Saída
 
+A instância de Game, por padrão, registra um evento de saída do jogo.
 Se quiser definir uma função para fechar o jogo, crie a instância de Game 
 passando o parâmetro `quit = False`
 
