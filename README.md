@@ -2,7 +2,7 @@
 Pygame Manager é um gerenciador de interfaces para jogos desenvolvidos com Pygame, permitindo a criação modular de telas e eventos com uma estrutura organizada e extensível.
 
 ## Recursos
-- Modularidade: Registre e gerencie interfaces de forma independente.
+- Modularidade: Crie interfaces de forma independente e flexível.
 - Eventos: Registre os eventos do pygame no formato de decoradores.
 - Inicialização Simplificada: Configure o jogo de forma clara e estruturada.
 
@@ -16,114 +16,117 @@ Para instalar o gerenciador, navegue até a pasta que você deseja e rode o segu
 ```bash
 git clone https://github.com/KauanHK/pygame-manager
 ```
-
-## Inicialização
-Crie uma instância de Game
-```python
-from manager import Game
-
-game = Game()
+Caso queira usar no seu projeto, instale com o pip:
+```bash
+pip install git+https://github.com/KauanHK/pygame-manager
 ```
-Esse objeto será responsável por executar o jogo e lidar com as trocas de interfaces.
-O próximo passo é criar as interfaces e registrá-las.
 
 ## Interfaces
 Criação de uma interface:
 ```python
-from manager import Interface
+from pygame_manager import Interface
 
-interface = Interface('game')
+interface = Interface('example')
 ```
-O parâmetro **name** é obrigatório. Ele serve para identificar a interface.
+O parâmetro **name** é obrigatório. Ele serve para identificar a interface e não pode ser alterado.
 
 Você pode pegar uma determinada interface com **get_interface**.
+Isso evita dores de cabeça com 'circular import' caso use a interface em diferentes módulos.
 ```python
-from manager import get_interface
+from pygame_manager import get_interface
 
-game_interface = get_interface('game')
+example_interface = get_interface('example')
 ```
-Isso retorna a instância já criada com o nome '*game*'. Caso não exista nenhuma interface com o nome fornecido, é lançada uma exceção.
+Isso retorna a instância já criada com o nome '*game*'. 
+Caso não exista nenhuma interface com o nome fornecido, lança uma exceção.
+
+### Subinterfaces
+Você pode registrar subinterfaces. 
+Em um jogo que mostra um popup de game over quando o jogador perde 
+pode registrar esse popup como uma subinterface.
+```python
+game = Interface('game')
+game_over = Interface('game_over')
+
+game.register_interface(game_over)
+
+def collided_wall():
+    if player.collide_wall():
+        game_over.activate()
+```
+Nesse exemplo, quando o player colidir com uma parede, 
+a subinterface game_over será ativada.
 
 ## Eventos
-Existem duas categorias de eventos:
- - **Eventos de interface**: São executados apenas na interface em que foram registrados.
- - **Eventos globais**: São executados em todas as interfaces.
+Os eventos são registrados nas interfaces.
 
-Um exemplo de evento global seria o de fechar o jogo.
-```python
-from manager import quit_pygame
-
-@game.event(pygame.QUIT)
-def quit():
-    quit_pygame()
-```
-Isso faz com que, em qualquer interface, se houver o evento do tipo **pygame.QUIT**, essa função seja chamada.
-A função **quit_pygame** lança a exceção QuitPygame, o que faz com que o gerenciador feche o jogo.
-Por padrão, esse evento já é registrado ao criar a instância de **Game**.
-
-Caso você queira implementar algo ao fechar o jogo, crie a instância de **Game** da seguinte forma:
-```python
-from manager import Game, quit_pygame
-
-game = Game(quit = False)
-
-@game.event(pygame.QUIT)
-def quit():
-    # Implemente aqui seu código
-    quit_pygame()
-```
-Definir o parâmetro **quit** como False fará com que a função para fechar o jogo não seja criada automaticamente.
-Mesmo que o evento de **pygame.QUIT** não esteja definido, você pode fechar o jogo com ctrl+c de forma segura.
-
-### Eventos de interface
-Imagine que você deseja trocar de interface quando o usuário clicar em um botão.
+Para registrar um evento de pressionamento de uma tecla:
 ```python
 import pygame
-from manager import switch_interface
+from pygame_manager import get_interface
 
-interface = Interface('menu')
-button_rect = pygame.Rect(350, 400, 220, 100)
+example_interface = get_interface('example')
+rect = pygame.Rect(200, 400, 50, 50)
 
-@interface.event(pygame.MOUSEBUTTONDOWN, params = ('pos', 'button'))
-def click(pos, button):
-    if button == pygame.BUTTON_LEFT and button_rect.collidepoint(pos):
-        switch_interface('game')
+@example_interface.event(pygame.KEYDOWN, key = pygame.K_RIGHT)
+def move():
+    rect.x += 5
 ```
-Em um evento de click, a função será chamada passando os valores dos atributos **pos** e **button** do evento pygame.
-A função **switch_interface** faz com que a interface mude para a especificada no parâmetro **name**.
-A verificação do botão e de colisão podem ser passadas diretamente no decorador:
+Essa função será executada sempre que **example_interface** estiver ativa e 
+houver o evento de pressionamento da tecla para a direita.
+
+Para dar mais funcionalidades a esse *rect*, vamos criar uma classe. 
+Ela terá eventos que dependem do parâmetro **self** para funcionar corretamente. 
+Por isso, ao criar classes com eventos, essa classe deve ser registrada 
+com o decorador .register_cls().
 ```python
-@interface.event(
-    pygame.MOUSEBUTTONDOWN,
-    button = pygame.BUTTON_LEFT,
-    pos = lambda pos: button_rect.collidepoint(pos)
-)
-def click():
-    switch_interface('game')
+import pygame
+from pygame_manager import get_interface
+
+interface = get_interface('example')
+
+@interface.register_cls
+class Rect:
+    
+    def __init__(self, x, y, width, height):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.vy = 0
+        self.gravity = 0.2
+        self.floor = 500
+
+    @interface.event(pygame.KEYDOWN, key = pygame.K_SPACE)
+    def jump(self):
+        self.vy = -10
+    
+    def update(self):
+        self.rect.y += self.vy
+        if self.rect.y > self.floor:
+            self.rect.y = self.floor
+            self.vy = 0
+        else:
+            self.vy += self.gravity
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, (255, 255, 255), self.rect)
 ```
-Os kwargs passados se referem aos valores dos atributos do evento pygame. Nesse exemplo, quando houver o evento **pygame.MOUSEBUTTONDOWN**, 
-o gerenciador verificará se **pygame_event.button == pygame.BUTTON_LEFT** e se **func(pygame_event.pos) == True**. 
-Se todas as verificações forem verdadeiras, a função **click** será executada.
+O método *.jump()* será executado para todas as instâncias de Rect.
 
-**Passar um atributo em kwargs que o evento pygame não possui poderá causar um erro durante a execução do jogo.** Por exemplo, registrar um evento do 
-tipo **pygame.MOUSEBUTTONDOWN** passando o kwarg **key** poderá causar um *AttributeError*.
-
-O gerenciador suporta funções como kwarg em eventos. Elas devem ter exatamente um parâmetro, que é o valor do atributo do evento e devem retornar um valor booleano. 
-Caso seja um método, elas devem ter dois parâmetros: A instância (self), e o atributo (attr).
-
-## Eventos em objetos
-O gerenciador suporta o registro de métodos para eventos.
+Se você criar um botão, somente um botão será clicado por vez. 
+Para diferenciar os botões, você pode passar uma função nos kwargs do decorador do evento:
 ```python
-interface = get_interface('game')
+import pygame
+from pygame_manager import get_interface
+
+interface = get_interface('example')
 
 @interface.register_cls
 class Button:
-
-    def __init__(self, text: str, x: int, y: int, command: Callable) -> None:
-        ...
+    
+    def __init__(self, command, *args):
         self.command = command
-        self.rect = pygame.Rect(x, y, *self.image.get_size())
-
+        self.rect: pygame.Rect
+        ...
+    
     @interface.event(
         pygame.MOUSEBUTTONDOWN,
         button = pygame.BUTTON_LEFT,
@@ -136,31 +139,99 @@ A classe *Button* é registrada na interface com o decorador **interface.registe
 Neste exemplo, quando houver um evento de click com o botão esquerdo do mouse e o rect da instância colidir com a posição do mouse, será chamada o método **Button.click** 
 passando a sua instância como primeiro parâmetro.
 
+Vamos passar o comando para o botão trocar de interface.
+```python
+from pygame_manager import switch_interface
+
+button = Button(lambda: switch_interface('menu'))
+```
+A função **switch_interface()** desativa a interface atual e todas as suas subinterfaces 
+e ativa a interface indicada.
+
+## Group
+Você pode agrupar interfaces para registrar eventos nelas.
+
+Para registrar a classe *Button* em múltiplas interfaces, siga esta estrutura:
+```python
+from pygame_manager import Group
+
+group = Group('game_over', 'menu')
+
+@group.register_cls
+class Button:
+    ...
+    @group.event(
+        pygame.MOUSEBUTTONDOWN,
+        button = pygame.BUTTON_LEFT,
+        pos = lambda self, pos: self.rect.collidepoint(pos)
+    )
+    def click(self):
+        self.command()
+```
+Só serão executados os eventos das interfaces do grupo que estiverem ativas.
+
 ## Frame
 Para registrar um frame, use o decorador **Game.frame** ou **Interface.frame**. Assim como os eventos, ele pode ser global ou de interface. 
 A função do frame deve receber a tela do jogo como primeiro parâmetro.
-### Frame de interface
+
+É executado apenas nessa interface e somente se ela estiver ativa.
 ```python
 @interface.frame
-def frame(screen: pg.Surface) -> None:
+def frame(screen: pygame.Surface) -> None:
     screen.fill((0, 0, 0))
     for button in buttons:
         button.draw(screen)
 ```
-### Frame global
+
+## Inicialização
+Crie uma instância de Game, o gerenciador do jogo. 
+Ele executa e gerencia as interfaces.
 ```python
-@game.frame
-def frame(screen: pg.Surface) -> None:
-    screen.fill((0, 0, 0))
+from pygame_manager import Game
+
+game_manager = Game()
 ```
-O gerenciador executa primeiro os eventos e frames globais. A lógica é parecida com essa:
+Caso você queira registrar um evento para fechar o jogo 
+em qualquer interface quando o usuário pressionar a tecla *esc*, 
+use a instância de game:
 ```python
-while True:
-    for event in pygame.event.get();
-        run_global_event(event)
-        run_interface_event(event)
-    run_global_frame()
-    run_interface_frame()
-    clock.tick(fps)
-    pg.display.flip()
+import pygame
+from pygame_manager import quit_pygame
+
+@game_manager.event(pygame.KEYDOWN, key = pygame.K_ESCAPE)
+def close_game():
+    quit_pygame()
 ```
+A função **quit_pygame** lança a exceção **QuitPygame** para o gerenciador. 
+Se uma exceção ocorrer durante o programa, o pygame é fechado. 
+Você pode registrar quantos eventos quiser de cada tipo, com exceção de **pygame.QUIT**, 
+pois o jogo será fechado imediatamente.
+
+Por padrão, a instância de Game registra um evento para fechar o jogo. 
+Se essa não for sua intenção, crie Game passando **quit = False**
+```python
+game = Game(quit = False)
+
+@game.event(pygame.QUIT)
+def quit():
+    # Implemente aqui seu código
+    quit_pygame()
+```
+
+Antes de executar o jogo, você deve registrar todas as interfaces. 
+Supondo que cada interface foi criada em um módulo e que podem acontecer error, 
+use Game.pygame_init() para inicializar de maneira segura. 
+```python
+game_manager = Game(fps = 60)
+with game_manager.pygame_init():
+    from . import game, menu, options
+   
+    game_manager.register_interface(game.interface)
+    game_manager.register_interface(menu.interface)
+    game_manager.register_interface(options.interface)
+    
+    menu.interface.activate()
+    game_manager.run(pygame.display.set_mode((900, 720)))
+```
+Não se esqueça de registrar as subinterfaces nas interfaces e 
+de ativar ao menos uma interface.
