@@ -1,6 +1,8 @@
 import pygame as pg
 from .event import LoadingEvent, Event
-from .exceptions import SwitchInterface, ActivatedInterfaceError, DeactivatedInterfaceError
+from .exceptions import (
+    SwitchInterface, ActivatedInterfaceError, DeactivatedInterfaceError, InterfaceExistsError, InterfaceNotFoundError
+)
 from .types import FuncEvent, FuncFrame, EventsClass
 from functools import wraps
 from abc import ABC, abstractmethod
@@ -232,6 +234,9 @@ class Interface(InterfaceManager):
         super().__init__()
 
         # Armazenar a instância no map objects
+        if name in Interface.objects:
+            raise InterfaceExistsError(f"Interface '{name}' já existe.")
+
         self._name = name
         Interface.objects[name] = self
 
@@ -274,7 +279,7 @@ def get_interface(name: str) -> Interface:
     Se não houver nenhuma interface com o nome fornecido, lança um KeyError."""
 
     if name not in Interface.objects:
-        raise KeyError(f"Interface '{name}' não existe.")
+        raise InterfaceNotFoundError(f"Interface '{name}' não existe.")
     return Interface.objects[name]
 
 
