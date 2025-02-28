@@ -113,3 +113,6 @@ class Group(Manager):
 
         for it in self._interfaces:
             it.set_cls(cls)
+
+    def __repr__(self) -> str:
+        return f'<Group({self._interfaces})>'

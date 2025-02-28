@@ -64,5 +64,4 @@ class Game(InterfaceManager):
             pg.display.flip()
 
     def __repr__(self) -> str:
-        return f'Interface({self._name})'
-    
+        return f'<Game({self.fps} fps)>'

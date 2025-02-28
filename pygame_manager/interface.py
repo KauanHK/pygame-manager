@@ -266,7 +266,7 @@ class Interface(InterfaceManager):
         self._interfaces.append(interface)
 
     def __repr__(self) -> str:
-        return f'Interface({self._name})'
+        return f'<Interface({self._name})>'
 
 
 def get_interface(name: str) -> Interface:
