@@ -208,6 +208,14 @@ class InterfaceManager(Manager):
         self._objects[obj.__class__.__qualname__].append(obj)
 
 
+    def __enter__(self) -> Self:
+        pg.init()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        pg.quit()
+
+
 class Interface(InterfaceManager):
     objects: dict[str, Self] = {}
 
