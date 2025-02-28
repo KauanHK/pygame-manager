@@ -1,5 +1,5 @@
 from .interface import Interface, get_interface, Manager
-from .utils import FuncEvent, EventsClass
+from .types import FuncEvent, EventsClass
 from functools import wraps
 from typing import Callable
 

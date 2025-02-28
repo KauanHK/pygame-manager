@@ -1,7 +1,7 @@
 import pygame as pg
 from .event import LoadingEvent, Event
-from .utils import SwitchInterface, FuncEvent, FuncFrame, EventsClass, ActivatedInterfaceError, \
-    DeactivatedInterfaceError
+from .exceptions import SwitchInterface, ActivatedInterfaceError, DeactivatedInterfaceError
+from .types import FuncEvent, FuncFrame, EventsClass
 from functools import wraps
 from abc import ABC, abstractmethod
 from typing import Callable, Self, Any
