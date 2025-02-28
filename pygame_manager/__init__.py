@@ -2,7 +2,7 @@ from .game import Game
 from .interface import Interface, get_interface, activate_interface, deactivate_interface
 from .event import Event, LoadingEvent, BaseEvent
 from .group import Group
-from .utils import PygameInit, QuitPygame, SwitchInterface, switch_interface, quit_pygame
+from .utils import QuitPygame, SwitchInterface, switch_interface, quit_pygame
 
 
 __all__ = [
