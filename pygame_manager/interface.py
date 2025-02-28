@@ -45,6 +45,8 @@ class InterfaceManager(Manager):
         # Frame da interface
         self._frame = None
 
+        self._init: bool = False
+
     def init(self) -> None:
         """Carrega os eventos registrados."""
 
@@ -210,10 +212,12 @@ class InterfaceManager(Manager):
 
     def __enter__(self) -> Self:
         pg.init()
+        self._init = True
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         pg.quit()
+        self._init = False
 
 
 class Interface(InterfaceManager):
