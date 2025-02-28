@@ -1,9 +1,9 @@
 import pygame as pg
-from .interface import BaseInterface, Interface
+from .interface import InterfaceManager, Interface
 from .utils import PygameInit, QuitPygame, quit_pygame
 
 
-class Game(BaseInterface):
+class Game(InterfaceManager):
 
     def __init__(
             self,

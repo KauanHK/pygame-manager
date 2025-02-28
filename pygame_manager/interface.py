@@ -1,12 +1,13 @@
 import pygame as pg
 from .event import LoadingEvent, Event
-from .utils import SwitchInterface, FuncEvent, FuncFrame, EventsClass, ActivatedInterfaceError, DeactivatedInterfaceError
+from .utils import SwitchInterface, FuncEvent, FuncFrame, EventsClass, ActivatedInterfaceError, \
+    DeactivatedInterfaceError
 from functools import wraps
 from abc import ABC, abstractmethod
 from typing import Callable, Self, Any
 
 
-class Base(ABC):
+class Manager(ABC):
 
     def __init__(self):
         self._interfaces: list[Interface] = []
@@ -26,7 +27,7 @@ class Base(ABC):
     def register_cls(self, cls: type) -> type: ...
 
 
-class BaseInterface(Base):
+class InterfaceManager(Manager):
 
     def __init__(self) -> None:
         """Base para interfaces. Gerencia eventos e frames."""
@@ -58,7 +59,7 @@ class BaseInterface(Base):
                 objects = self._objects.get(owner)
                 events = le.load(cls, objects)
                 self._events[le.event_type].extend(events)
-        
+
         for it in self._interfaces:
             it.init()
 
@@ -102,7 +103,7 @@ class BaseInterface(Base):
             return f
 
         return decorator
-    
+
     def register_cls(self, cls: type[EventsClass]) -> type[EventsClass]:
         """Registra uma classe para carregar eventos dela.
 
@@ -113,10 +114,11 @@ class BaseInterface(Base):
         :param type cls: A classe a ser registrada.
         :return: A própria classe.
         """
-        
+
         self.set_cls(cls)
 
         original_init = cls.__init__
+
         @wraps(original_init)
         def __init__(*args, **kwargs) -> None:
             original_init(*args, **kwargs)
@@ -124,7 +126,7 @@ class BaseInterface(Base):
 
         cls.__init__ = __init__
         return cls
-    
+
     def frame(self, func: FuncFrame) -> FuncFrame:
         """Registra um frame para a interface.
 
@@ -152,7 +154,7 @@ class BaseInterface(Base):
                     it.deactivate()
             if not activated:
                 raise e
-            
+
     def _run_event(self, pygame_event: pg.event.Event) -> None:
         """Executa um evento pygame.
         
@@ -177,7 +179,7 @@ class BaseInterface(Base):
             self._frame(screen)
         for it in self.active_interfaces:
             it._run_frame(screen)
-            
+
     def set_cls(self, cls: type[EventsClass]) -> None:
         """Registra uma classe para carregar seus eventos e retorna None.
 
@@ -206,9 +208,7 @@ class BaseInterface(Base):
         self._objects[obj.__class__.__qualname__].append(obj)
 
 
-
-class Interface(BaseInterface):
-
+class Interface(InterfaceManager):
     objects: dict[str, Self] = {}
 
     def __init__(self, name: str) -> None:
@@ -265,11 +265,13 @@ def get_interface(name: str) -> Interface:
         raise KeyError(f"Interface '{name}' não existe.")
     return Interface.objects[name]
 
+
 def activate_interface(name: str) -> None:
     """Ativa a interface com o nome fornecido. Caso a interface já esteja ativa,
     lança um ActivatedInterfaceError.
     """
     get_interface(name).activate()
+
 
 def deactivate_interface(name: str) -> None:
     """Desativa a interface com o nome fornecido. Caso a interface já esteja desativada,

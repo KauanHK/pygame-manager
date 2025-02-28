@@ -16,6 +16,7 @@ class BaseEvent:
         self.params = params
         self.kwargs = kwargs
 
+
 class Event(BaseEvent):
 
     def run(self, pygame_event: pg.event.Event) -> None:
@@ -27,7 +28,7 @@ class Event(BaseEvent):
 
         params = self._get_params(pygame_event)
         event_dict = pygame_event.dict
-        for k,v in self.kwargs.items():
+        for k, v in self.kwargs.items():
 
             if callable(v):
                 v_params = self._get_v_params(event_dict[k])
@@ -41,12 +42,12 @@ class Event(BaseEvent):
 
     def _get_params(self, pygame_event: pg.event.Event) -> dict[str, Any]:
         """Retorna um dicionário com os parâmetros a serem passados para a função."""
-        
+
         params = {}
         for param in self.params:
             params[param] = pygame_event.dict[param]
         return params
-    
+
     def _get_v_params(self, value: Any) -> tuple[Any] | tuple[object, Any]:
         """Retorna uma tupla com os parâmetros a serem passados para uma função passada nos kwargs do Event.
         
@@ -59,7 +60,7 @@ class Event(BaseEvent):
         if hasattr(self.func, '__self__'):
             return self.func.__self__, value
         return (value,)
-    
+
     def __repr__(self) -> str:
         return f'Event({self.func.__qualname__}{self.params}, kwargs = {self.kwargs})'
 
@@ -91,7 +92,7 @@ class LoadingEvent(BaseEvent):
 
         if cls is None:
             return [Event(self.func, self.params, **self.kwargs)]
-        
+
         events = []
         for obj in objects:
             events.append(Event(getattr(obj, self.func.__name__), self.params, **self.kwargs))

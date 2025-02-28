@@ -1,4 +1,4 @@
-from .interface import Interface, get_interface, Base
+from .interface import Interface, get_interface, Manager
 from .utils import FuncEvent, EventsClass
 from functools import wraps
 from typing import Callable
@@ -16,7 +16,7 @@ def _multiple_interfaces_wrapper(func: FuncEvent) -> FuncEvent:
     return wrapper
 
 
-class Group(Base):
+class Group(Manager):
 
     def __init__(self, *interfaces: Interface | str) -> None:
         """Agrupa interfaces para registrar eventos de maneira mais simples.
