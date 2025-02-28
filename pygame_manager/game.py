@@ -24,20 +24,6 @@ class Game(InterfaceManager):
         if quit:
             self.event(pg.QUIT)(quit_pygame)
 
-    def pygame_init(self) -> PygameInit:
-        """Retorna um context manager para inicialização segura do pygame.
-        O context manager inicializa o pygame e só o fecha se uma exceção ocorrer.
-
-        Use dentro de um bloco with:
-        ```python
-        with game.pygame_init():
-            import main_menu, options_menu, game
-        ```
-        """
-
-        self._init = True
-        return PygameInit()
-
     def register_interface(self, interface: Interface) -> None:
         """Registra uma interface."""
 
