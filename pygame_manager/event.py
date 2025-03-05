@@ -1,5 +1,5 @@
 import pygame as pg
-from pygame_manager.types import EventsClass, FuncEvent
+from .types import EventsClass, FuncEvent
 from functools import wraps
 from typing import Callable, Any
 
