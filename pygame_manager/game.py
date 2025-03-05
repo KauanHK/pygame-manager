@@ -27,7 +27,7 @@ class Game(BaseInterface):
         self._is_init: bool = False
         self._is_pygame_init: bool = False
         if quit:
-            self.event(pg.QUIT)(quit_pygame)
+            self._interface_runner.register_event(quit_pygame, pg.QUIT)
 
     def is_init(self) -> bool:
 
