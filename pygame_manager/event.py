@@ -2,6 +2,10 @@ import pygame as pg
 from typing import Callable, Any
 
 
+def _get_owner_qualname(func: Callable) -> str:
+    return '.'.join(func.__qualname__.split('.')[:-1])
+
+
 class BaseEvent:
     """Classe base para eventos."""
 
@@ -15,6 +19,7 @@ class BaseEvent:
         self.func = func
         self.params = params
         self.kwargs = kwargs
+        self.owner_qualname: str = _get_owner_qualname(func)
 
 
 class Event(BaseEvent):
