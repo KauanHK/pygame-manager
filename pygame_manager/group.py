@@ -1,4 +1,5 @@
-from .interface import Interface, get_interface, Manager
+from .interface import get_interface, Interface
+from ._interface import InterfaceLoader
 from .types import FuncEvent, EventsClass
 from functools import wraps
 from typing import Callable
@@ -16,18 +17,18 @@ def _multiple_interfaces_wrapper(func: FuncEvent) -> FuncEvent:
     return wrapper
 
 
-class Group(Manager):
+class Group:
 
     def __init__(self, *interfaces: Interface | str) -> None:
         """Agrupa interfaces para registrar eventos de maneira mais simples.
 
         :param interfaces: Interfaces a serem agrupadas.
         """
-        super().__init__()
+        self._interfaces_loader: InterfaceLoader = InterfaceLoader()
         for it in interfaces:
             if isinstance(it, str):
                 it = get_interface(it)
-            self._interfaces.append(it)
+            self._interfaces_loader.register_interface(it)
 
     def add(self, interface: Interface | str) -> None:
         """Adicionado uma interface ao grupo.
@@ -37,7 +38,7 @@ class Group(Manager):
 
         if isinstance(interface, str):
             interface = get_interface(interface)
-        self._interfaces.append(interface)
+        self._interfaces_loader.register_interface(interface)
 
     def remove(self, interface: Interface | str) -> None:
         """Remove uma interface do grupo.
@@ -47,9 +48,9 @@ class Group(Manager):
 
         if isinstance(interface, str):
             interface = get_interface(interface)
-        self._interfaces.remove(interface)
+        self._interfaces_loader.remove_interface(interface)
 
-    def add_event(self, func: FuncEvent, event_type: int, params: tuple[str, ...] = (), **kwargs) -> None:
+    def register_event(self, func: FuncEvent, event_type: int, params: tuple[str, ...] = (), **kwargs) -> None:
         """Adiciona um evento para todas as interfaces do grupo e retorna None.
 
         :param func: A função do evento.
@@ -58,8 +59,8 @@ class Group(Manager):
         :param kwargs: As condições do evento.
         """
 
-        for it in self._interfaces:
-            it.add_event(func, event_type, params, **kwargs)
+        for it in self._interfaces_loader.interfaces:
+            it.register_event(func, event_type, params, **kwargs)
 
     def event(self, event_type: int, params: tuple[str, ...] = (), **kwargs) -> Callable[[FuncEvent], FuncEvent]:
         """Registra um evento para as interfaces do grupo.
@@ -74,8 +75,8 @@ class Group(Manager):
         """
     
         def decorator(f: FuncEvent) -> FuncEvent:
-            for it in self._interfaces:
-                it.add_event(f, event_type, params, **kwargs)
+            for it in self._interfaces_loader.interfaces:
+                it.register_event(f, event_type, params, **kwargs)
             return _multiple_interfaces_wrapper(f)
         
         return decorator
@@ -87,19 +88,19 @@ class Group(Manager):
         :return: A própria classe.
         """
 
-        self._set_cls(cls)
+        self.register_grouped_cls(cls)
 
         original_init = cls.__init__
         @wraps(original_init)
         def __init__(*args, **kwargs) -> None:
             original_init(*args, **kwargs)
-            for it in self._interfaces:
-                it.add_object(args[0])
+            for it in self._interfaces_loader.interfaces:
+                it.register_object(args[0])
 
         cls.__init__ = __init__
         return cls
 
-    def _set_cls(self, cls: type[EventsClass]) -> None:
+    def register_grouped_cls(self, cls: type[EventsClass]) -> None:
         """Adiciona uma classe para todas as interfaces do grupo
         sem decorar o seu .__init__() e retorna None.
 
@@ -111,8 +112,8 @@ class Group(Manager):
         :param cls: A classe a ser registrada.
         """
 
-        for it in self._interfaces:
-            it.set_cls(cls)
+        for it in self._interfaces_loader.interfaces:
+            it.register_grouped_cls(cls)
 
     def __repr__(self) -> str:
-        return f'<Group({self._interfaces})>'
+        return f'<Group({self._interfaces_loader.interfaces})>'
