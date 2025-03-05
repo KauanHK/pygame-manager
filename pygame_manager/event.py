@@ -133,7 +133,8 @@ class EventsManager:
     def register_event(self, func: FuncEvent, event_type: int, params: tuple[str, ...] = (), **kwargs: Any) -> FuncEvent:
 
         le: LoadingEvent = LoadingEvent(func, event_type, params, **kwargs)
-        self._loading_events.get(le.owner_qualname, []).append(le)
+        self._loading_events[le.owner_qualname] = self._loading_events.get(le.owner_qualname, [])
+        self._loading_events[le.owner_qualname].append(le)
         return func
 
     def register_cls(self, cls: type[EventsClass]) -> type[EventsClass]:
