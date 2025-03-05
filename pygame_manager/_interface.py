@@ -45,7 +45,7 @@ class BaseInterface(ABC):
 class InterfaceLoader(BaseInterface, ABC):
 
     def __init__(self) -> None:
-        self._interfaces: list[Self] = []
+        self.interfaces: list[Self] = []
 
     def register_interface(self, interface: Self) -> None:
         """Registra uma interface.
@@ -54,11 +54,11 @@ class InterfaceLoader(BaseInterface, ABC):
         :return: None.
         """
 
-        self._interfaces.append(interface)
+        self.interfaces.append(interface)
 
     def remove_interface(self, interface: Self) -> None:
 
-        self._interfaces.remove(interface)
+        self.interfaces.remove(interface)
 
 
 class InterfaceRunner(InterfaceLoader, ABC):
@@ -79,7 +79,7 @@ class InterfaceRunner(InterfaceLoader, ABC):
         """Carrega os eventos registrados."""
 
         self._events.init()
-        for it in self._interfaces:
+        for it in self.interfaces:
             it.init()
 
     def register_event(
@@ -192,7 +192,7 @@ class NamedInterface(InterfaceRunner):
 
     def get_active_interfaces(self) -> list[Self]:
 
-        return list(filter(lambda it: it.is_active(), self._interfaces))
+        return list(filter(lambda it: it.is_active(), self.interfaces))
 
     def activate(self) -> None:
 
@@ -219,7 +219,7 @@ class NamedInterfaceRunner(NamedInterface):
             self._run_event(pygame_event)
         except SwitchInterface as e:
             activated = False
-            for it in self._interfaces:
+            for it in self.interfaces:
                 if it.name == e.name:
                     it.activate()
                     activated = True
