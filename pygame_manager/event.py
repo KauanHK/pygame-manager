@@ -123,11 +123,13 @@ class EventsManager:
     def init(self) -> None:
 
         self._events.clear()
-        for cls in map(lambda c: self._classes.get(c), self._loading_events):
-            for le in self._loading_events[cls.__qualname__]:
-                events: list[Event] = le.load(cls, self._objects[cls.__qualname__])
-                self._events.get(le.event_type, []).extend(events)
-
+        for owner in self._loading_events:
+            for le in self._loading_events[owner]:
+                cls = self._classes.get(le.owner_qualname)
+                objects = self._objects.get(le.owner_qualname)
+                self._events[le.event_type] = self._events.get(le.event_type, [])
+                self._events[le.event_type].extend(le.load(cls, objects))
+            
     def register_event(self, func: FuncEvent, event_type: int, params: tuple[str, ...] = (), **kwargs: Any) -> FuncEvent:
 
         le: LoadingEvent = LoadingEvent(func, event_type, params, **kwargs)
