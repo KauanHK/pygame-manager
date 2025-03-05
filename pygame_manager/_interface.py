@@ -4,7 +4,6 @@ from .frame import FrameManager
 from .types import FuncEvent, EventsClass, FuncFrame
 from .exceptions import ActivatedInterfaceError, DeactivatedInterfaceError, SwitchInterface
 from abc import ABC, abstractmethod
-from functools import wraps
 from typing import Any, Callable, Self
 
 
@@ -236,8 +235,7 @@ class NamedInterfaceRunner(NamedInterface):
         :param pg.Surface screen: A tela onde será desenhado o frame.
         """
 
-        if self._frame is not None:
-            self._frame.run(screen)
+        self._frame.run(screen)
         for it in self.get_active_interfaces():
             it.run_frame(screen)
 
