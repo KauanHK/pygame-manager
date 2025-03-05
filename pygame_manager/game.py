@@ -1,5 +1,6 @@
 import pygame as pg
 from ._interface import BaseInterface, NamedInterfaceRunner
+from .interface import Interface
 from .types import FuncEvent, EventsClass
 from .utils import QuitPygame, quit_pygame
 from typing import Any, Callable, Self
@@ -72,6 +73,14 @@ class Game(BaseInterface):
     def register_grouped_cls(self, cls: type[EventsClass]) -> None:
 
         self._interface_runner.register_grouped_cls(cls)
+
+    def register_interface(self, interface: Interface) -> None:
+
+        self._interface_runner.register_interface(interface)
+
+    def remove_interface(self, interface: Interface) -> None:
+
+        self._interface_runner.remove_interface(interface)
 
     def run(self, screen: pg.Surface) -> None:
         """Executa o jogo.
