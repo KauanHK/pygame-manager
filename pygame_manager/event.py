@@ -128,10 +128,11 @@ class EventsManager:
                 events: list[Event] = le.load(cls, self._objects[cls.__qualname__])
                 self._events.get(le.event_type, []).extend(events)
 
-    def add_event(self, func: FuncEvent, event_type: int, params: tuple[str, ...] = (), **kwargs: Any) -> None:
+    def register_event(self, func: FuncEvent, event_type: int, params: tuple[str, ...] = (), **kwargs: Any) -> FuncEvent:
 
         le: LoadingEvent = LoadingEvent(func, event_type, params, **kwargs)
         self._loading_events.get(le.owner_qualname, []).append(le)
+        return func
 
     def register_cls(self, cls: type[EventsClass]) -> type[EventsClass]:
         """Registra uma classe para carregar eventos dela.
@@ -144,33 +145,19 @@ class EventsManager:
         :return: A própria classe.
         """
 
-        self.set_cls(cls)
+        self.register_grouped_cls(cls)
 
         original_init = cls.__init__
 
         @wraps(original_init)
         def __init__(*args, **kwargs) -> None:
             original_init(*args, **kwargs)
-            self.add_object(args[0])
+            self.register_object(args[0])
 
         cls.__init__ = __init__
         return cls
 
-    def set_cls(self, cls: type[EventsClass]) -> None:
-        """Registra uma classe para carregar seus eventos e retorna None.
-
-        A diferença para register_cls() é que o __init__ da classe não é decorado,
-        portanto não garante que os eventos de instâncias dessa classe sejam carregados.
-        Use set_cls para registrar classes com eventos em múltiplas interfaces, ou
-        use o decorador Group.register_cls().
-
-        :param cls: A classe a ser registrada.
-        :return: None.
-        """
-        self._classes[cls.__qualname__] = cls
-        self._objects[cls.__qualname__] = []
-
-    def add_object(self, obj: object) -> None:
+    def register_object(self, obj: object) -> None:
         """Adiciona um objeto a lista de objetos de sua classe.
 
         É necessário registrar a classe antes de adicionar o
@@ -182,6 +169,20 @@ class EventsManager:
         :param obj: O objeto a ser adicionado.
         """
         self._objects[obj.__class__.__qualname__].append(obj)
+
+    def register_grouped_cls(self, cls: type[EventsClass]) -> None:
+        """Registra uma classe para carregar seus eventos e retorna None.
+
+        A diferença para register_cls() é que o __init__ da classe não é decorado,
+        portanto não garante que os eventos de instâncias dessa classe sejam carregados.
+        Use register_grouped_cls para registrar classes com eventos em múltiplas interfaces, ou
+        use o decorador Group.register_cls().
+
+        :param cls: A classe a ser registrada.
+        :return: None.
+        """
+        self._classes[cls.__qualname__] = cls
+        self._objects[cls.__qualname__] = []
 
     def run(self, pygame_event: pg.event.Event) -> None:
 
