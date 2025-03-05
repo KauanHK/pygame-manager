@@ -1,5 +1,5 @@
 from .interface import get_interface, Interface
-from ._interface import InterfaceLoader
+from ._interface import NamedInterfaceRunner
 from .types import FuncEvent, EventsClass
 from functools import wraps
 from typing import Callable
@@ -12,19 +12,22 @@ def _multiple_interfaces_wrapper(func: FuncEvent) -> FuncEvent:
     """
     @wraps(func)
     def wrapper(*args, **kwargs) -> None:
-        if args[0].interface.is_active:
+        if args[0].interface.is_active():
             func(*args, **kwargs)
     return wrapper
 
 
 class Group:
 
+    _id_counter: int = 1
+
     def __init__(self, *interfaces: Interface | str) -> None:
         """Agrupa interfaces para registrar eventos de maneira mais simples.
 
         :param interfaces: Interfaces a serem agrupadas.
         """
-        self._interfaces_loader: InterfaceLoader = InterfaceLoader()
+        self._interfaces_loader: NamedInterfaceRunner = NamedInterfaceRunner(f'_group_{Group._id_counter}')
+        Group._id_counter += 1
         for it in interfaces:
             if isinstance(it, str):
                 it = get_interface(it)
